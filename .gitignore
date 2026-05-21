@@ -1,0 +1,19 @@
+# Dependencies
+/vendor/
+
+# TYPO3 generated files
+/public/typo3
+/public/index.php
+/public/fileadmin/
+/public/uploads/
+/var/
+
+# DDEV
+/.ddev/
+
+# Environment
+/.env
+/.env.local
+
+# OS
+.DS_Store
