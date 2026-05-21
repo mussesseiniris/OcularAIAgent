@@ -1,66 +1,151 @@
-# TYPO3 CMS Base Distribution
+# Ocular TYPO3 Chatbot Extension
 
-Get going quickly with TYPO3 CMS.
+AI RAG chatbot extension for the Ocular website, built on TYPO3 v13.
 
-## Prerequisites
+---
 
-* PHP 8.2
-* [Composer](https://getcomposer.org/download/)
+## Requirements
 
-## Quickstart
+Make sure you have the following installed before starting:
 
-* `composer create-project typo3/cms-base-distribution project-name ^13`
-* `cd project-name`
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Homebrew](https://brew.sh/) (Mac only)
+- [DDEV](https://ddev.com/)
+- Git
 
-Note that this distribution installs most, but not all of the TYPO3 CMS core extensions.
-Depending on your need you might also want to install other TYPO3 extensions from
-[packagist.org](https://packagist.org/?type=typo3-cms-framework).
+---
 
-### Setup
+## Setup Instructions
 
-To start an interactive installation, you can do so by executing the following
-command and then follow the wizard:
+### 1. Install Docker Desktop
 
-```bash
-composer exec typo3 setup
-```
+Download and install from [docker.com](https://www.docker.com/products/docker-desktop/). Make sure it is running before continuing.
 
-### Setup unattended (optional)
-
-If you're a more advanced user, you might want to leverage the unattended installation.
-To do this, you need to execute the following command and substitute the arguments
-with your own environment configuration.
+### 2. Install DDEV
 
 ```bash
-export TYPO3_SETUP_ADMIN_PASSWORD=$(tr -dc "_A-Za-z0-9#=$()/" < /dev/urandom | head -c24)
-composer exec -- typo3 setup \
-    --no-interaction \
-    --server-type=other \
-    --driver=sqlite \
-    --admin-username=admin \
-    --admin-email="info@example.com" \
-    --project-name="My TYPO3 Project" \
-    --create-site="http://localhost:8000/"
-echo "Admin password: ${TYPO3_SETUP_ADMIN_PASSWORD}"
+brew install ddev/ddev/ddev
 ```
 
-### Development server
+### 3. Clone the repository
 
-While it's advised to use a more sophisticated web server such as
-Apache 2 or Nginx, you can instantly run the project by using PHPs` built-in
-[web server](https://secure.php.net/manual/en/features.commandline.webserver.php).
+```bash
+git clone <YOUR_GITHUB_REPO_URL>
+cd ocular-typo3-extension
+```
 
-* `TYPO3_CONTEXT=Development php -S localhost:8000 -t public`
-* open your browser at "http://localhost:8000"
+### 4. Start the DDEV environment
 
-Please be aware that the built-in web server is single threaded and only meant
-to be used for development.
+```bash
+ddev start
+```
 
-##  Next steps
+This will download and start all required Docker containers (web server, database, etc). First time may take a few minutes.
 
-* [Getting Started with TYPO3](https://docs.typo3.org/permalink/t3start:start)
-* [Create a Site Package](https://docs.typo3.org/permalink/t3sitepackage:start)
+### 5. Install PHP dependencies
 
-## License
+```bash
+ddev composer install
+```
 
-GPL-2.0 or later
+This automatically installs TYPO3 v13, LLPhant, and all other dependencies listed in `composer.json`.
+
+### 6. Set up TYPO3
+
+```bash
+ddev exec php vendor/bin/typo3 setup
+```
+
+Follow the prompts. Use these values for the database:
+
+| Field    | Value   |
+|----------|---------|
+| Driver   | mysqli  |
+| Host     | db      |
+| Port     | 3306    |
+| Username | db      |
+| Password | db      |
+| Database | db      |
+
+Set your own admin username and password when prompted.
+
+### 7. Activate the Extension
+
+```bash
+ddev exec php vendor/bin/typo3 extension:setup
+```
+
+---
+
+## Accessing the site
+
+| URL | Description |
+|-----|-------------|
+| https://ocular-typo3-extension.ddev.site | Frontend |
+| https://ocular-typo3-extension.ddev.site/typo3 | TYPO3 Backend |
+
+---
+
+## Project Structure
+
+```
+ocular-typo3-extension/
+├── packages/
+│   └── chatbot/          ← Our Extension (write code here)
+│       ├── Classes/       ← PHP controllers and services
+│       ├── Configuration/ ← TYPO3 configuration files
+│       └── composer.json
+├── public/               ← Web root
+├── vendor/               ← All dependencies (do not edit)
+├── var/                  ← Cache and logs (auto-generated)
+└── composer.json         ← Project dependencies
+```
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| CMS | TYPO3 v13 |
+| PHP | 8.2 |
+| AI Framework | LLPhant 0.11 |
+| LLM | Claude (Anthropic) |
+| Embeddings | Voyage AI |
+| Vector Database | Qdrant |
+| Local Dev | DDEV + Docker |
+
+---
+
+## Daily Development
+
+Start the environment each day:
+```bash
+ddev start
+```
+
+Stop when done:
+```bash
+ddev stop
+```
+
+---
+
+## Troubleshooting
+
+**Docker not starting?**
+```bash
+sudo pkill -f docker
+open /Applications/Docker.app
+```
+
+**DDEV not responding?**
+```bash
+ddev restart
+```
+
+**Changes not showing?**
+```bash
+ddev exec php vendor/bin/typo3 cache:flush
+```
+
