@@ -173,7 +173,7 @@ ocular-typo3-extension/
 | CMS | TYPO3 v13 |
 | PHP | 8.2 |
 | AI Framework | LLPhant 0.11 |
-| LLM | Claude (Anthropic) |
+| LLM | Llama 70B  |
 | Embeddings | Voyage AI |
 | Vector Database | Qdrant |
 | Local Dev | DDEV + Docker |
