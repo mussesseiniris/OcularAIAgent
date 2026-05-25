@@ -17,10 +17,18 @@ class OcularCrawler
             'base_uri' => 'https://ocular.nz',
             'timeout' => 10
         ]);
+
+        // Top-level service categories used to classify project tags
         $this->knownServiceTypes = ['Platforms', 'Communication', 'Experiences'];
     }
 
-    //scrape from the website to create metadata
+       /**
+     * Scrapes the projects listing page and returns basic metadata for each project.
+     * Classifies each tag as either a serviceType (top-level category) or a tag (specific skill).
+     *
+     * @return array List of projects with url, name, tags, and serviceTypes
+     */
+
     public function getProjectList(): array
     {
         $projects = [];
@@ -33,6 +41,8 @@ class OcularCrawler
             $name = $node->filter('a')->attr('title');
             $serviceTypes = [];
             $tags = [];
+            
+            // Split data-groups into serviceTypes and tags
             foreach ($dataGroups as $group) {
                 if (in_array($group, $knownServiceTypes)) {
                     $serviceTypes[] = $group;
@@ -51,15 +61,28 @@ class OcularCrawler
         return $projects;
     }
 
+      /**
+     * Scrapes a single project detail page and returns its description and main content.
+     * Removes the first and last paragraphs to avoid duplicating the description and footer.
+     *
+     * @param string $url Relative URL of the project page (e.g. /project/light-house-cinema/)
+     * @return array Array with 'description' (meta tag) and 'detail' (main body content)
+     */
     public function getProjectDetail(string $url): array
     {
 
         $html = $this->client->get($url)->getBody()->getContents();
         $crawler = new Crawler($html);
+        
+        // Extract short description from meta tag
         $description = $crawler->filter('meta[name="description"]')->attr('content');
+
+        // Extract all paragraphs from body text sections
         $details = $crawler->filter('div.ce-bodytext p')->each(function (Crawler $node) {
             return trim($node->text());
         });
+        
+        // Remove empty paragraphs, re-index, and strip first (duplicate) and last (footer) paragraphs
         $details = array_filter($details);
         $details = array_values($details);
         $details = array_slice($details, 1, -1);
@@ -70,12 +93,21 @@ class OcularCrawler
         ];
     }
 
+ /**
+     * Builds the full list of chunks by combining metadata from getProjectList()
+     * and content from getProjectDetail(). Each project produces two chunks:
+     * one for the description and one for the detailed content.
+     *
+     * @return array List of chunks, each with 'content' and 'metadata'
+     */
     public function buildChunks(): array
     {
         $contents = [];
         $projects = $this->getProjectList();
         foreach ($projects as $project) {
             $projectDetails = $this->getProjectDetail($project['url']);
+
+            //chunk1: short project overview
             $contents[] = [
                 'content' => $projectDetails['description'],
                 'metadata' => [
@@ -86,6 +118,8 @@ class OcularCrawler
                     'serviceTypes' => $project['serviceTypes'],
                 ],
             ];
+            
+            //chunk2: full project detail
             $contents[] = [
                 'content' => $projectDetails['detail'],
                 'metadata' => [
