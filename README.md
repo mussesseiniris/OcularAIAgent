@@ -255,6 +255,21 @@ networks:
    OR 
 
    Check on "http://localhost:6333/dashboard"
+
+  
+
+6. Install Qdrant PHP client
+ddev composer require hkulekci/qdrant -W 
+
+OR 
+
+ddev composer install
+
+7. Set Voyage AI API key
+ddev dotenv set .ddev/.env --voyage-ai-api-key=your_key_here
+
+8. Restart DDEV
+ddev restart
    
 
 
