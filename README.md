@@ -219,7 +219,8 @@ ddev exec php vendor/bin/typo3 cache:flush
 ## Qdrant Setup
 
 1. Create `.ddev/docker-compose.qdrant.yaml` with the following content:
-   services:
+   
+services:
   qdrant:
     image: qdrant/qdrant:latest
     container_name: ddev-${DDEV_SITENAME}-qdrant
