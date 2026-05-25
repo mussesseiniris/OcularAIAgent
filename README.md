@@ -216,3 +216,38 @@ ddev restart
 ddev exec php vendor/bin/typo3 cache:flush
 ```
 
+## Qdrant Setup
+
+1. Create `.ddev/docker-compose.qdrant.yaml` with the following content:
+   services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ddev-${DDEV_SITENAME}-qdrant
+    restart: "no"
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - ddev_default
+
+volumes:
+  qdrant_storage:
+
+networks:
+  ddev_default:
+    external: true
+    name: ddev_OcularAIAgent_default
+
+2. Restart DDEV:
+   ddev restart
+
+3. Verify Qdrant is running:
+   curl http://localhost:6333
+
+4. Create the Qdrant collection:
+   Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -Method PUT -ContentType "application/json" -Body '{"vectors": {"size": 1024, "distance": "Cosine"}}' -UseBasicParsing
+
+5. Verify the collection was created:
+   Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -UseBasicParsing
+
