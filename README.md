@@ -252,3 +252,9 @@ networks:
 5. Verify the collection was created:
    Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -UseBasicParsing
 
+   OR 
+
+   Check on "http://localhost:6333/dashboard"
+   
+
+
