@@ -9,19 +9,28 @@ use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\Qdrant\QdrantVectorStore;
 use Ocular\Chatbot\Domain\Model\ChunkDocument;
+use Qdrant\Config;
 use Qdrant\Models\PointsStruct;
 use Qdrant\Models\PointStruct;
 use Qdrant\Models\VectorStruct;
 
-class OcularQdrantIngester extends QdrantVectorStore
+class QdrantIngester extends QdrantVectorStore
 {
+    private string $collectionName;
+
+    public function __construct(Config $config, string $collectionName, ?string $vectorName = null)
+    {
+        parent::__construct($config, $collectionName, $vectorName);
+        $this->collectionName = $collectionName;
+    }
+
     /**
      * @throws Exception
      */
-    protected function createPointFromDocument(PointsStruct $points, Document $document): void
+    public function addDocument(Document $document): void
     {
         if (!$document instanceof ChunkDocument) {
-            parent::createPointFromDocument($points, $document);
+            parent::addDocument($document);
             return;
         }
 
@@ -31,6 +40,7 @@ class OcularQdrantIngester extends QdrantVectorStore
 
         $id = DocumentUtils::formatUUIDFromUniqueId(DocumentUtils::getUniqueId($document));
 
+        $points = new PointsStruct();
         $points->addPoint(
             new PointStruct(
                 $id,
@@ -45,8 +55,11 @@ class OcularQdrantIngester extends QdrantVectorStore
                     'chunk_type'     => $document->chunkType,
                     'content'        => $document->content,
                     'embedding_text' => $document->embeddingText,
+                    'source_name'    => $document->sourceName,
                 ]
             )
         );
+
+        $this->client->collections($this->collectionName)->points()->upsert($points);
     }
 }
