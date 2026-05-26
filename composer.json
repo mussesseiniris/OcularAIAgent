@@ -15,6 +15,7 @@
 		"sort-packages": true
 	},
 	"require": {
+		"hkulekci/qdrant": "^1.0",
 		"ocular/chatbot": "@dev",
 		"symfony/css-selector": "^7.4",
 		"symfony/dom-crawler": "^7.4",
