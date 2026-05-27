@@ -28,8 +28,7 @@ class ChatService
     {
         // Generate embedding for the question
         $questionEmbedding = $this->voyage4EmbeddingGenerator->embedText($question);
-        // Search Qdrant for the most similar chunks
-        // $results =  $this->qdrantVectorStore->similaritySearch($questionEmbedding, $limit);
+
         // Use new QueryRequest instead of deprecated SearchRequest
         $searchRequest = (new \Qdrant\Models\Request\Points\QueryRequest())
             ->setQuery(['nearest' => $questionEmbedding])
@@ -132,9 +131,6 @@ class ChatService
         }
         $detectedTags = array_unique($detectedTags);
 
-        var_dump($detectedServiceTypes);
-        var_dump($detectedTags);
-        // $filter=[];
         $filter = new Filter();
         if (!empty($detectedServiceTypes)) {
             $filter->addMust(new MatchAny('service_types', $detectedServiceTypes));
