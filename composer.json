@@ -44,7 +44,8 @@
 		"typo3/cms-sys-note": "^13.4",
 		"typo3/cms-tstemplate": "^13.4",
 		"typo3/cms-viewpage": "^13.4",
-		"typo3/cms-webhooks": "^13.4"
+		"typo3/cms-webhooks": "^13.4",
+		"vlucas/phpdotenv": "^5.6"
 	},
 	"repositories": [
 		{

@@ -6,3 +6,20 @@ services:
   Ocular\Chatbot\:
     resource: '../Classes/*'
     exclude: '../Classes/Domain/Model/*'
+  
+  # Voyage AI - generates embeddings for search queries
+  LLPhant\Embeddings\EmbeddingGenerator\VoyageAI\Voyage4EmbeddingGenerator:
+    arguments:
+      $apiKey: '%env(VOYAGE_API_KEY)%'
+
+  # Qdrant - vector database connection
+  LLPhant\Embeddings\VectorStores\Qdrant\QdrantVectorStore:
+    arguments:
+      $host: 'localhost'
+      $port: 6333
+      $collectionName: 'ocular_chunks'
+
+  # Groq - LLM that generates the final answer
+  LLPhant\Chat\GroqAIChat:
+    arguments:
+      $apiKey: '%env(GROQ_API_KEY)%'
