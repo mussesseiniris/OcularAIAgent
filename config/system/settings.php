@@ -110,9 +110,10 @@ return [
             'frontend.cache.autoTagging' => true,
             'security.system.enforceAllowedFileExtensions' => true,
         ],
-        'sitename' => 'Ocular-typo3',
+        'sitename' => 'ocular-typo3-extension',
         'systemMaintainers' => [
             1,
         ],
+        'trustedHostsPattern' => '.*',
     ],
 ];
