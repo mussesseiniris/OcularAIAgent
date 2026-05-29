@@ -247,7 +247,7 @@ networks:
    curl http://localhost:6333
 
 4. Create the Qdrant collection:
-   Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -Method PUT -ContentType "application/json" -Body '{"vectors": {"size": 1024, "distance": "Cosine"}}' -UseBasicParsing
+   Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -Method PUT -ContentType "application/json" -Body '{"vectors": {"openai": {"size": 1024, "distance": "Cosine"}}}' -UseBasicParsing
 
 5. Verify the collection was created:
    Invoke-WebRequest -Uri "http://localhost:6333/collections/ocular_chunks" -UseBasicParsing

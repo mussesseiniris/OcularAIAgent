@@ -51,32 +51,45 @@ class AboutUsCrawler
 
         $currentDepartment = '';
 
-            $crawler->filter('div.frame-type-header, div.ce-bodytext')->each(function (Crawler $node) use (&$members, &$currentDepartment) {
+        $crawler->filter('div.frame-type-header, div.ce-bodytext')->each(function (Crawler $node) use (&$members, &$currentDepartment) {
 
         // Department heading block
-        if ($node->matches('div.frame-type-header')) {
-            $h3 = $node->filter('h3');
-            if ($h3->count() > 0) {
-                $text = trim($h3->text());
-                if (isset($this->departmentServiceTypeMap[$text])) {
-                    $currentDepartment = $text;
+            if ($node->matches('div.frame-type-header')) {
+                $h3 = $node->filter('h3');
+                if ($h3->count() > 0) {
+                    $text = trim($h3->text());
+                    if (isset($this->departmentServiceTypeMap[$text])) {
+                        $currentDepartment = $text;
+                    }
                 }
+                return;
             }
-            return;
-        }
 
         // Person block — strong (name) + i (role) inside a p tag
-        if ($node->matches('div.ce-bodytext')) {
-            $node->filter('p')->each(function (Crawler $p) use (&$members, &$currentDepartment) {
-                if ($p->filter('strong')->count() > 0 && $p->filter('i')->count() > 0) {
+            if ($node->matches('div.ce-bodytext')) {
+                $node->filter('p')->each(function (Crawler $p) use (&$members, &$currentDepartment) {
+            
+                $name='';
+                if ($p->filter('strong')->count() > 0) {
                     $name = trim($p->filter('strong')->first()->text());
-                    $role = trim($p->filter('i')->first()->text());
-
-                    if (empty($name) || empty($role) || strlen($name) < 2) {
+                    if (empty($name) || strlen($name) < 2) {
                         return;
                     }
+                }
 
-                    $members[] = [
+                $role = '';
+                $p->filter('i')->each(function (Crawler $iTag) use ($name, &$role) {
+                    $iText = trim($iTag->text());
+                    if ($iText !== $name && !empty($iText)) {
+                        $role = $iText;
+                    }
+                });
+
+                if (empty($role)) {
+                    return;
+                }
+
+                $members[] = [
                         'name'         => $name,
                         'role'         => $role,
                         'department'   => $currentDepartment,
@@ -84,12 +97,11 @@ class AboutUsCrawler
                         'tags'         => $this->departmentTagMap[$currentDepartment] ?? [],
                         'url'          => '/about-us/',
                     ];
-                }
-            });
-        }
-    });
+                });
+            }
+        });
 
-    return $members;
+        return $members;
     }
 
     /**
@@ -135,10 +147,11 @@ class AboutUsCrawler
             $chunks[] = [
                 'content'  => $overview,
                 'metadata' => [
+                    'name'         => 'OCULAR',
                     'entityType'   => 'agency',
                     'entityId'     => 'agency_ocular',
                     'entityName'   => 'OCULAR',
-                    'chunkType'    => 'company_overview',
+                    'chunk_type'    => 'company_overview',
                     'serviceTypes' => ['Platforms', 'Communication', 'Experiences'],
                     'tags'         => [],
                     'url'          => '/about-us/',
@@ -153,10 +166,11 @@ class AboutUsCrawler
             $chunks[] = [
                 'content'  => $content,
                 'metadata' => [
+                    'name'         => $member['name'],
                     'entityType'   => 'person',
                     'entityId'     => 'person_' . strtolower(str_replace([' ', "'"], ['_', ''], $member['name'])),
                     'entityName'   => $member['name'],
-                    'chunkType'    => 'team_member',
+                    'chunk_type'    => 'team_member',
                     'role'         => $member['role'],
                     'department'   => $member['department'],
                     'serviceTypes' => $member['serviceTypes'],
@@ -181,10 +195,11 @@ class AboutUsCrawler
             $chunks[] = [
                 'content'  => $content,
                 'metadata' => [
+                    'name'         => $department,
                     'entityType'   => 'department',
                     'entityId'     => 'department_' . strtolower(str_replace(' ', '_', $department)),
                     'entityName'   => $department,
-                    'chunkType'    => 'department_overview',
+                    'chunk_type'    => 'department_overview',
                     'serviceTypes' => $this->departmentServiceTypeMap[$department] ?? [],
                     'tags'         => $this->departmentTagMap[$department] ?? [],
                     'url'          => '/about-us/',

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 // $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
 // $dotenv->load();
 
 use Ocular\Chatbot\Crawler\OcularCrawler;
+use Ocular\Chatbot\Crawler\AboutUsCrawler;
 use Ocular\Chatbot\Domain\Model\ChunkDocument;
 use Ocular\Chatbot\Embeddings\Voyage4EmbeddingGenerator;
 use Ocular\Chatbot\Service\QdrantIngester;
@@ -22,6 +23,7 @@ echo "Starting ingestion...\n";
 //Crawl and build chunks
 echo "Crawling ocular.nz...\n";
 $crawler = new OcularCrawler();
+// $crawler = new AboutUsCrawler();
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n";
 
@@ -53,9 +55,9 @@ foreach ($chunks as $index => $chunk) {
     $doc = new ChunkDocument();
     $doc->content = $chunk['content'];
     $doc->embeddingText = $chunk['content'];
-    $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['name'])) . '_' . $chunk['metadata']['chunk_type'];
-    $doc->entityId = 'project_' . strtolower(str_replace(' ', '_', $chunk['metadata']['name']));
-    $doc->entityType = 'project';
+    $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
+    $doc->entityId = $chunk['metadata']['entityId'] . strtolower(str_replace(' ', '_', $chunk['metadata']['name']));
+    $doc->entityType = $chunk['metadata']['entityType'];
     $doc->entityName = $chunk['metadata']['name'];
     $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
     $doc->tags = $chunk['metadata']['tags'];

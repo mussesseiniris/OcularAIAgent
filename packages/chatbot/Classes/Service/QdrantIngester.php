@@ -38,7 +38,9 @@ class QdrantIngester extends QdrantVectorStore
             throw new Exception('Document must have an embedding before ingesting.');
         }
 
-        $id = DocumentUtils::formatUUIDFromUniqueId(DocumentUtils::getUniqueId($document));
+        // $id = DocumentUtils::formatUUIDFromUniqueId(DocumentUtils::getUniqueId($document));
+
+        $id = DocumentUtils::formatUUIDFromUniqueId($document->chunkId);
 
         $points = new PointsStruct();
         $points->addPoint(

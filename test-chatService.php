@@ -23,5 +23,6 @@ $chat = new \LLPhant\Chat\OpenAIChat($openAIConfig);
 $chatService = new \Ocular\Chatbot\Service\ChatService($embeddingGenerator, $qdrantVectorStore, $chat);
 
 // Test ask()
-$answer = $chatService->ask('What brand projects has Ocular done?');
+// $answer = $chatService->ask('Who can I talk to about ux?');
+$answer = $chatService->ask('What branding projects has Ocular done?');
 echo $answer;

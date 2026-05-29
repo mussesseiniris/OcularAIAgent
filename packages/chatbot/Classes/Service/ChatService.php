@@ -162,8 +162,18 @@ class ChatService
         $entityType = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_type'], $results));
         $entityName= implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_name'], $results));
         $context = implode("\n\n", array_map(fn($doc) => $doc['payload']['content'], $results));
+        $tags = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['tags'] ?? []), $results));
         //step 3: Build prompt 
-        $prompt = "Using the following context to answer questions. \n\nEntityType:$entityType\n\nEntity name:$entityName\n\nContext:\n$context;\n\nQuestion:$question.";
+        $prompt = 
+        "You are a helpful assistant for OCULAR. "
+        . "Answer the question using the follwoing context below."
+        . "Be direct and confident if the context contains relevant information.\n\n"
+        . "EntityType:$entityType\n\n"
+        . "Entity name:$entityName\n\n"
+        . "Context:\n$context\n\n"
+        . "Tags: $tags\n\n"
+        . "Question:$question.";
+
         //step 4: Send to LLM and return the answer
         $answer = $this->chat->generateText($prompt);
         return $answer;
