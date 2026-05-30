@@ -176,6 +176,7 @@ class AboutUsCrawler
                     'serviceTypes' => $member['serviceTypes'],
                     'tags'         => $member['tags'],
                     'url'          => $member['url'],
+                    'articleTypes' => [],
                 ],
             ];
         }
@@ -203,6 +204,7 @@ class AboutUsCrawler
                     'serviceTypes' => $this->departmentServiceTypeMap[$department] ?? [],
                     'tags'         => $this->departmentTagMap[$department] ?? [],
                     'url'          => '/about-us/',
+                    'articleTypes' => [],
                 ],
             ];
         }

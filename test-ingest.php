@@ -9,6 +9,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Ocular\Chatbot\Crawler\OcularCrawler;
 use Ocular\Chatbot\Crawler\AboutUsCrawler;
+use Ocular\Chatbot\Crawler\ArticlesCrawler;
 use Ocular\Chatbot\Domain\Model\ChunkDocument;
 use Ocular\Chatbot\Embeddings\Voyage4EmbeddingGenerator;
 use Ocular\Chatbot\Service\QdrantIngester;
@@ -22,8 +23,9 @@ echo "Starting ingestion...\n";
 
 //Crawl and build chunks
 echo "Crawling ocular.nz...\n";
-$crawler = new OcularCrawler();
+// $crawler = new OcularCrawler();
 // $crawler = new AboutUsCrawler();
+$crawler = new ArticlesCrawler();
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n";
 
@@ -49,7 +51,7 @@ $qdrantIngester = new QdrantIngester(
 
 //Loop through chunks, embed and ingest
 foreach ($chunks as $index => $chunk) {
-    echo "Processing chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
+    echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
 
     // Create ChunkDocument
     $doc = new ChunkDocument();
@@ -63,6 +65,7 @@ foreach ($chunks as $index => $chunk) {
     $doc->tags = $chunk['metadata']['tags'];
     $doc->chunkType = $chunk['metadata']['chunk_type'];
     $doc->sourceName = $chunk['metadata']['url'];
+    $doc->articleTypes = $chunk['metadata']['articleTypes'];
 
     if (empty(trim($doc->content))) {
     echo "SKIPPING: Empty content for chunk: " . $doc->chunkId . "\n";

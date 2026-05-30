@@ -119,6 +119,7 @@ class OcularCrawler
                     'entityType'   => 'project',
                     'entityId'     => 'project_' . strtolower(str_replace(' ', '_', $project['name'])),
                     'entityName'   => $project['name'],
+                    'articleTypes' => [],
                 ],
             ];
             
@@ -134,6 +135,7 @@ class OcularCrawler
                     'entityType'   => 'project',
                     'entityId'     => 'project_' . strtolower(str_replace(' ', '_', $project['name'])),
                     'entityName'   => $project['name'],
+                    'articleTypes' => [],
                 ]
             ];
         }

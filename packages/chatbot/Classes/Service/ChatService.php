@@ -72,6 +72,8 @@ class ChatService
             'Experiences',
         ];
 
+        $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
+
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
 
@@ -89,31 +91,72 @@ class ChatService
         $detectedServiceTypes = array_unique($detectedServiceTypes);
 
 
-        $synonymTagsMap = [
-            'brand' => 'Brand',
-            'branding' => 'Brand',
-            'UX' => 'UX Design',
-            'video design' => 'Video',
-            'graphy' => 'Graphic Design',
-            'photo' => 'Graphic Design',
-            'web' => 'Web Development',
-            'website' => 'Web Development',
-            'website design' => 'Web Design',
-            'event' => 'Campaign',
-            'customer relationship management' => 'CRM',
-            'platform' => 'Platform Architecture',
-        ];
-        $knownTags = [
-            'Video',
-            'UX Design',
-            'Brand',
-            'Graphic Design',
-            'Web Development',
-            'Web Design',
-            'Campaign',
-            'CRM',
-            'Platform Architecture',
-        ];
+        $detectedArticleTypes = [];
+        foreach ($knownArticleTypes as $articleType) {
+            if (stripos($question, $articleType) !== false) {
+                $detectedArticleTypes[] = $articleType;
+            }
+        }
+
+        $detectedArticleTypes = array_unique($detectedArticleTypes);
+
+
+
+            
+            
+    $synonymTagsMap = [
+    // Existing project synonyms
+    'brand'                          => 'Brand',
+    'branding'                       => 'Brand',
+    'UX'                             => 'UX Design',
+    'video design'                   => 'Video',
+    'graphy'                         => 'Graphic Design',
+    'photo'                          => 'Graphic Design',
+    'web'                            => 'Web Development',
+    'website'                        => 'Web Development',
+    'website design'                 => 'Web Design',
+    'event'                          => 'Campaign',
+    'customer relationship management' => 'CRM',
+    'platform'                       => 'Platform Architecture',
+
+    // Article-specific synonyms
+    'strategy'                       => 'Strategy',
+    'process'                        => 'Process',
+    'design thinking'                => 'Design Thinking',
+    'digital'                        => 'Digital',
+    'how to'                         => 'Guide',
+    'opinion'                        => 'Opinion',
+    'explainer'                      => 'Explainer',
+    'insight'                        => 'Agency Insight',
+    'approach'    => 'Process',
+
+    'development' => 'Process',
+    'how'         => 'Process',
+    ];
+
+    $knownTags = [
+    // Existing project tags
+    'Video',
+    'UX Design',
+    'Brand',
+    'Graphic Design',
+    'Web Development',
+    'Web Design',
+    'Campaign',
+    'CRM',
+    'Platform Architecture',
+
+    // Article-specific tags
+    'Strategy',
+    'Process',
+    'Design Thinking',
+    'Digital',
+    'Guide',
+    'Opinion',
+    'Explainer',
+    'Agency Insight',
+    ];
+
 
         $detectedTags = [];
         foreach ($knownTags as $tag) {
@@ -140,7 +183,11 @@ class ChatService
             $filter->addMust(new MatchAny('tags', $detectedTags));
         }
 
-        if (!empty($detectedServiceTypes) || !empty($detectedTags)) {
+        if (!empty($detectedArticleTypes)) {
+            $filter->addMust(new MatchAny('article_type', $detectedArticleTypes));
+        }
+
+        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes)) {
             $searchRequest->setFilter($filter);
         }
 
