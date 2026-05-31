@@ -5,7 +5,7 @@ namespace Ocular\Chatbot\Crawler;
 use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
-class OcularCrawler
+class ProjectsCrawler
 {
     private Client $client;
     private array $knownServiceTypes;
@@ -116,6 +116,11 @@ class OcularCrawler
                     'url' => $project['url'],
                     'tags' => $project['tags'],
                     'serviceTypes' => $project['serviceTypes'],
+                    'entityType'   => 'project',
+                    'entityId'     => 'project_' . strtolower(str_replace(' ', '_', $project['name'])),
+                    'entityName'   => $project['name'],
+                    'articleTypes' => [],
+                    'relatedArticles' => [],
                 ],
             ];
             
@@ -128,6 +133,11 @@ class OcularCrawler
                     'url' => $project['url'],
                     'tags' => $project['tags'],
                     'serviceTypes' => $project['serviceTypes'],
+                    'entityType'   => 'project',
+                    'entityId'     => 'project_' . strtolower(str_replace(' ', '_', $project['name'])),
+                    'entityName'   => $project['name'],
+                    'articleTypes' => [],
+                    'relatedArticles' => [],
                 ]
             ];
         }

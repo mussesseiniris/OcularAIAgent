@@ -72,6 +72,26 @@ class ChatService
             'Experiences',
         ];
 
+        $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
+
+        // $processMap = [
+        // 'design'          => 'article_process_design',
+        // 'ux'              => 'article_process_design',
+        // 'experience'      => 'article_process_design',
+        // 'brand'           => 'article_process_design',
+        // 'branding'        => 'article_process_design',
+        // 'web'             => 'article_process_online',
+        // 'website development' => 'article_process_online',
+        // 'typo3 development' => 'article_process_online',
+        // 'platform'        => 'article_process_online',
+        // 'video'           => 'article_process_video',
+        // 'content'         => 'article_process_video',
+        // 'process'         => 'article_process_design', // ← catches "design process" directly
+        // 'CRM'               => 'article_process_online',
+        // 'Platform Architecture'=> 'article_process_online',
+
+        // ];
+
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
 
@@ -89,31 +109,80 @@ class ChatService
         $detectedServiceTypes = array_unique($detectedServiceTypes);
 
 
-        $synonymTagsMap = [
-            'brand' => 'Brand',
-            'branding' => 'Brand',
-            'UX' => 'UX Design',
-            'video design' => 'Video',
-            'graphy' => 'Graphic Design',
-            'photo' => 'Graphic Design',
-            'web' => 'Web Development',
-            'website' => 'Web Development',
-            'website design' => 'Web Design',
-            'event' => 'Campaign',
-            'customer relationship management' => 'CRM',
-            'platform' => 'Platform Architecture',
-        ];
-        $knownTags = [
-            'Video',
-            'UX Design',
-            'Brand',
-            'Graphic Design',
-            'Web Development',
-            'Web Design',
-            'Campaign',
-            'CRM',
-            'Platform Architecture',
-        ];
+        $detectedArticleTypes = [];
+        foreach ($knownArticleTypes as $articleType) {
+            if (stripos($question, $articleType) !== false) {
+                $detectedArticleTypes[] = $articleType;
+            }
+        }
+
+        $detectedArticleTypes = array_unique($detectedArticleTypes);
+
+        // $detectedProcess = [];
+        // foreach($processMap as $keyword => $process) {
+        //     if(stripos($question, $keyword) !== false) {
+        //         $detectedProcess[] = $process;
+        //     }
+        // }
+
+
+
+            
+            
+    $synonymTagsMap = [
+    // Existing project synonyms
+    'brand'                          => 'Brand',
+    'branding'                       => 'Brand',
+    'UX'                             => 'UX Design',
+    'video design'                   => 'Video',
+    'graphy'                         => 'Graphic Design',
+    'photo'                          => 'Graphic Design',
+    'web'                            => 'Web Development',
+    'website'                        => 'Web Development',
+    'website design'                 => 'Web Design',
+    'web development'                => 'Web Development',
+    'event'                          => 'Campaign',
+    'customer relationship management' => 'CRM',
+    'platform'                       => 'Platform Architecture',
+
+    // Article-specific synonyms
+    'strategy'                       => 'Strategy',
+    'process'                        => 'Process',
+    'design thinking'                => 'Design Thinking',
+    'digital'                        => 'Digital',
+    'how to'                         => 'Guide',
+    'opinion'                        => 'Opinion',
+    'explainer'                      => 'Explainer',
+    'insight'                        => 'Agency Insight',
+    'approach'    => 'Process',
+
+    'development' => 'Process',
+    'how'         => 'Process',
+    ];
+
+    $knownTags = [
+    // Existing project tags
+    'Video',
+    'UX Design',
+    'Brand',
+    'Graphic Design',
+    'Web Development',
+    'Web Design',
+    'Campaign',
+    'CRM',
+    'Platform Architecture',
+
+    // Article-specific tags
+    'Strategy',
+    'Process',
+    'Design Thinking',
+    'Digital',
+    'Guide',
+    'Opinion',
+    'Explainer',
+    'Agency Insight',
+    ];
+
 
         $detectedTags = [];
         foreach ($knownTags as $tag) {
@@ -133,14 +202,23 @@ class ChatService
 
         $filter = new Filter();
         if (!empty($detectedServiceTypes)) {
-            $filter->addMust(new MatchAny('service_types', $detectedServiceTypes));
+            $filter->addShould(new MatchAny('service_types', $detectedServiceTypes));
         }
         if (!empty($detectedTags)) {
 
-            $filter->addMust(new MatchAny('tags', $detectedTags));
+            $filter->addShould(new MatchAny('tags', $detectedTags));
         }
 
-        if (!empty($detectedServiceTypes) || !empty($detectedTags)) {
+        if (!empty($detectedArticleTypes)) {
+            $filter->addShould(new MatchAny('article_type', $detectedArticleTypes));
+        }
+
+        // if (!empty($detectedProcess)) {
+        //     $filter->addShould(new MatchAny('entity_id', $detectedProcess));
+        //     $filter->addShould(New MatchAny('related_articles', $detectedProcess));
+        // }
+
+        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes)|| !empty($detectedProcess)) {
             $searchRequest->setFilter($filter);
         }
 
@@ -162,10 +240,26 @@ class ChatService
         $entityType = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_type'], $results));
         $entityName= implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_name'], $results));
         $context = implode("\n\n", array_map(fn($doc) => $doc['payload']['content'], $results));
+        $tags = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['tags'] ?? []), $results));
+        $relatedArticles = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['related_articles'] ?? []), $results));
+        // $entityIds = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_id'] ?? '', $results));
+        
         //step 3: Build prompt 
-        $prompt = "Using the following context to answer questions. \n\nEntityType:$entityType\n\nEntity name:$entityName\n\nContext:\n$context;\n\nQuestion:$question.";
+        $prompt = 
+        "You are a helpful assistant for OCULAR. "
+        . "Answer the question using the follwoing context below."
+        . "Be direct and confident if the context contains relevant information.\n\n"
+        . "EntityType:$entityType\n\n"
+        . "Entity name:$entityName\n\n"
+        // . "Entity ID: $entityIds\n\n"
+        . "Related Articles: $relatedArticles\n\n"
+        . "Context:\n$context\n\n"
+        . "Tags: $tags\n\n"
+        . "Question:$question.";
+
         //step 4: Send to LLM and return the answer
         $answer = $this->chat->generateText($prompt);
         return $answer;
     }
 }
+ 

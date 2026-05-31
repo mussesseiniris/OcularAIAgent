@@ -13,7 +13,9 @@ class ChunkDocument extends Document
     public string $entityType = '';
     public string $entityName = '';
     public array $serviceTypes = [];
+    public array $articleTypes = [];
     public array $tags = [];
     public string $chunkType = '';
     public string $embeddingText = '';
+    public array $relatedArticles = [];
 }
