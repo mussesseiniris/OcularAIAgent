@@ -1,0 +1,30 @@
+plugin.tx_chatbot_chatbot {
+    view {
+        templateRootPaths.0 = EXT:chatbot/Resources/Private/Templates/
+        partialRootPaths.0 = EXT:chatbot/Resources/Private/Partials/
+        layoutRootPaths.0 = EXT:chatbot/Resources/Private/Layouts/
+    }
+}
+
+chatbotAjax = PAGE
+chatbotAjax {
+    typeNum = 1589
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10.header = Content-Type: application/json
+        admPanel = 0
+        debug = 0
+        no_cache = 1
+        index_enable = 0
+    }
+    10 < tt_content.list.20.chatbot_chatbot
+}
+
+page.includeCSS.ocularChatbot = EXT:chatbot/Resources/Public/Css/ChatbotStyle.css
+page.includeJSFooter.ocularChatbot = EXT:chatbot/Resources/Public/JavaScript/Chatbot.js
+page.includeJSFooter.ocularChatbot.defer = 1
+
+page.footerData.10 = FLUIDTEMPLATE
+page.footerData.10 {
+    file = EXT:chatbot/Resources/Private/Templates/ChatWidget.html
+}
