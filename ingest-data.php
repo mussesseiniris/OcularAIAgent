@@ -7,7 +7,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 // $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
 // $dotenv->load();
 
-use Ocular\Chatbot\Crawler\OcularCrawler;
+use Ocular\Chatbot\Crawler\ProjectsCrawler;
 use Ocular\Chatbot\Crawler\AboutUsCrawler;
 use Ocular\Chatbot\Crawler\ArticlesCrawler;
 use Ocular\Chatbot\Crawler\ServiceCrawler;
@@ -24,10 +24,10 @@ echo "Starting ingestion...\n";
 
 //Crawl and build chunks
 echo "Crawling ocular.nz...\n";
-// $crawler = new OcularCrawler();
+// $crawler = new ProjectsCrawler();
 // $crawler = new AboutUsCrawler();
-// $crawler = new ArticlesCrawler();
-$crawler = new ServiceCrawler();
+$crawler = new ArticlesCrawler();
+// $crawler = new ServiceCrawler();
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n";
 

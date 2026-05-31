@@ -155,6 +155,8 @@ class AboutUsCrawler
                     'serviceTypes' => ['Platforms', 'Communication', 'Experiences'],
                     'tags'         => [],
                     'url'          => '/about-us/',
+                    'articleTypes' => [],
+                    'relatedArticles' => [],
                 ],
             ];
         }
