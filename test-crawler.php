@@ -31,3 +31,14 @@ echo "\n=== Chunks ===\n";
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n\n";
 print_r($chunks);
+
+
+// require_once 'vendor/autoload.php';
+// $crawler = new \Ocular\Chatbot\Crawler\ServiceCrawler();
+// // $projects = $crawler->getProjectList();
+// // print_r($projects);
+// // $projectDetails = $crawler->getProjectDetail('/project/light-house-cinema/');
+// echo "\n=== Chunks ===\n";
+// $chunks = $crawler->buildChunks();
+// echo "Found " . count($chunks) . " chunks\n\n";
+// print_r($chunks);

@@ -17,4 +17,5 @@ class ChunkDocument extends Document
     public array $tags = [];
     public string $chunkType = '';
     public string $embeddingText = '';
+    public array $relatedArticles = [];
 }

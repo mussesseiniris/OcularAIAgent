@@ -49,9 +49,9 @@ class ArticlesCrawler
      * service chunks resolves correctly to these article chunks.
      */
     private array $processArticleUrlMap = [
-        '/articles/articles-single?tx_news_pi1%5Baction%5D=detail&tx_news_pi1%5Bcontroller%5D=News&tx_news_pi1%5Bnews%5D=64&cHash=817365691de0eb5d4fa8f007f378a54d' => 'article_process_design_64',
-        '/articles/articles-single?tx_news_pi1%5Baction%5D=detail&tx_news_pi1%5Bcontroller%5D=News&tx_news_pi1%5Bnews%5D=60&cHash=f546d20b9b28a1fecdc6fa266d856431' => 'article_process_online_60',
-        '/articles/articles-single?tx_news_pi1%5Baction%5D=detail&tx_news_pi1%5Bcontroller%5D=News&tx_news_pi1%5Bnews%5D=62&cHash=85d68bb4f8ed8a118fb6c8a9b7d174e6' => 'article_process_video_62',
+    '/article/the-design-process-at-ocular/'        => 'article_process_design',
+    '/article/how-we-bring-online-projects-to-life/' => 'article_process_online',
+    '/article/the-video-process-at-ocular/'          => 'article_process_video',
     ];
 
     public function __construct()
@@ -240,14 +240,15 @@ class ArticlesCrawler
         // Check if this is a process article with a known stable ID
         if (isset($this->processArticleUrlMap[$url])) {
             return $this->processArticleUrlMap[$url];
-        }
+        } else {
 
         // For /article/slug/ URLs, derive from slug
         $slug = trim(parse_url($url, PHP_URL_PATH), '/');
         $slug = str_replace('article/', '', $slug);
         $slug = preg_replace('/[^a-z0-9_]/', '_', strtolower($slug));
 
-        return 'article_' . $slug;
+        return $slug;
+        }
     }
 
     /**
@@ -288,6 +289,7 @@ class ArticlesCrawler
                 'serviceTypes' => [],
                 'tags'         => $tags,
                 'url'          => $article['url'],
+                'relatedArticles' => [],
             ];
 
             // Chunk 1: Summary — answers "What articles does Ocular have about branding?"

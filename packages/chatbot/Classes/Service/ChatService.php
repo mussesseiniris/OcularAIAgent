@@ -74,6 +74,24 @@ class ChatService
 
         $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
 
+        // $processMap = [
+        // 'design'          => 'article_process_design',
+        // 'ux'              => 'article_process_design',
+        // 'experience'      => 'article_process_design',
+        // 'brand'           => 'article_process_design',
+        // 'branding'        => 'article_process_design',
+        // 'web'             => 'article_process_online',
+        // 'website development' => 'article_process_online',
+        // 'typo3 development' => 'article_process_online',
+        // 'platform'        => 'article_process_online',
+        // 'video'           => 'article_process_video',
+        // 'content'         => 'article_process_video',
+        // 'process'         => 'article_process_design', // ← catches "design process" directly
+        // 'CRM'               => 'article_process_online',
+        // 'Platform Architecture'=> 'article_process_online',
+
+        // ];
+
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
 
@@ -100,6 +118,13 @@ class ChatService
 
         $detectedArticleTypes = array_unique($detectedArticleTypes);
 
+        // $detectedProcess = [];
+        // foreach($processMap as $keyword => $process) {
+        //     if(stripos($question, $keyword) !== false) {
+        //         $detectedProcess[] = $process;
+        //     }
+        // }
+
 
 
             
@@ -115,6 +140,7 @@ class ChatService
     'web'                            => 'Web Development',
     'website'                        => 'Web Development',
     'website design'                 => 'Web Design',
+    'web development'                => 'Web Development',
     'event'                          => 'Campaign',
     'customer relationship management' => 'CRM',
     'platform'                       => 'Platform Architecture',
@@ -176,18 +202,23 @@ class ChatService
 
         $filter = new Filter();
         if (!empty($detectedServiceTypes)) {
-            $filter->addMust(new MatchAny('service_types', $detectedServiceTypes));
+            $filter->addShould(new MatchAny('service_types', $detectedServiceTypes));
         }
         if (!empty($detectedTags)) {
 
-            $filter->addMust(new MatchAny('tags', $detectedTags));
+            $filter->addShould(new MatchAny('tags', $detectedTags));
         }
 
         if (!empty($detectedArticleTypes)) {
-            $filter->addMust(new MatchAny('article_type', $detectedArticleTypes));
+            $filter->addShould(new MatchAny('article_type', $detectedArticleTypes));
         }
 
-        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes)) {
+        // if (!empty($detectedProcess)) {
+        //     $filter->addShould(new MatchAny('entity_id', $detectedProcess));
+        //     $filter->addShould(New MatchAny('related_articles', $detectedProcess));
+        // }
+
+        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes)|| !empty($detectedProcess)) {
             $searchRequest->setFilter($filter);
         }
 
@@ -210,6 +241,9 @@ class ChatService
         $entityName= implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_name'], $results));
         $context = implode("\n\n", array_map(fn($doc) => $doc['payload']['content'], $results));
         $tags = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['tags'] ?? []), $results));
+        $relatedArticles = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['related_articles'] ?? []), $results));
+        // $entityIds = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_id'] ?? '', $results));
+        
         //step 3: Build prompt 
         $prompt = 
         "You are a helpful assistant for OCULAR. "
@@ -217,6 +251,8 @@ class ChatService
         . "Be direct and confident if the context contains relevant information.\n\n"
         . "EntityType:$entityType\n\n"
         . "Entity name:$entityName\n\n"
+        // . "Entity ID: $entityIds\n\n"
+        . "Related Articles: $relatedArticles\n\n"
         . "Context:\n$context\n\n"
         . "Tags: $tags\n\n"
         . "Question:$question.";

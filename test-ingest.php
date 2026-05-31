@@ -10,6 +10,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Ocular\Chatbot\Crawler\OcularCrawler;
 use Ocular\Chatbot\Crawler\AboutUsCrawler;
 use Ocular\Chatbot\Crawler\ArticlesCrawler;
+use Ocular\Chatbot\Crawler\ServiceCrawler;
 use Ocular\Chatbot\Domain\Model\ChunkDocument;
 use Ocular\Chatbot\Embeddings\Voyage4EmbeddingGenerator;
 use Ocular\Chatbot\Service\QdrantIngester;
@@ -25,7 +26,8 @@ echo "Starting ingestion...\n";
 echo "Crawling ocular.nz...\n";
 // $crawler = new OcularCrawler();
 // $crawler = new AboutUsCrawler();
-$crawler = new ArticlesCrawler();
+// $crawler = new ArticlesCrawler();
+$crawler = new ServiceCrawler();
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n";
 
@@ -58,7 +60,7 @@ foreach ($chunks as $index => $chunk) {
     $doc->content = $chunk['content'];
     $doc->embeddingText = $chunk['content'];
     $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
-    $doc->entityId = $chunk['metadata']['entityId'] . strtolower(str_replace(' ', '_', $chunk['metadata']['name']));
+    $doc->entityId = $chunk['metadata']['entityId'];
     $doc->entityType = $chunk['metadata']['entityType'];
     $doc->entityName = $chunk['metadata']['name'];
     $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
@@ -66,6 +68,7 @@ foreach ($chunks as $index => $chunk) {
     $doc->chunkType = $chunk['metadata']['chunk_type'];
     $doc->sourceName = $chunk['metadata']['url'];
     $doc->articleTypes = $chunk['metadata']['articleTypes'];
+    $doc->relatedArticles = $chunk['metadata']['relatedArticles'];
 
     if (empty(trim($doc->content))) {
     echo "SKIPPING: Empty content for chunk: " . $doc->chunkId . "\n";

@@ -59,6 +59,7 @@ class QdrantIngester extends QdrantVectorStore
                     'embedding_text' => $document->embeddingText,
                     'source_name'    => $document->sourceName,
                     'article_type'   => $document->articleTypes,
+                    'related_articles' => $document->relatedArticles,
                 ]
             )
         );
