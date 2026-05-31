@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 // $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
 // $dotenv->load();
 
-use Ocular\Chatbot\Crawler\OcularCrawler;
+use Ocular\Chatbot\Crawler\ProjectsCrawler;
+use Ocular\Chatbot\Crawler\AboutUsCrawler;
+use Ocular\Chatbot\Crawler\ArticlesCrawler;
+use Ocular\Chatbot\Crawler\ServiceCrawler;
 use Ocular\Chatbot\Domain\Model\ChunkDocument;
 use Ocular\Chatbot\Embeddings\Voyage4EmbeddingGenerator;
 use Ocular\Chatbot\Service\QdrantIngester;
@@ -21,7 +24,10 @@ echo "Starting ingestion...\n";
 
 //Crawl and build chunks
 echo "Crawling ocular.nz...\n";
-$crawler = new OcularCrawler();
+// $crawler = new ProjectsCrawler();
+// $crawler = new AboutUsCrawler();
+$crawler = new ArticlesCrawler();
+// $crawler = new ServiceCrawler();
 $chunks = $crawler->buildChunks();
 echo "Found " . count($chunks) . " chunks\n";
 
@@ -47,20 +53,22 @@ $qdrantIngester = new QdrantIngester(
 
 //Loop through chunks, embed and ingest
 foreach ($chunks as $index => $chunk) {
-    echo "Processing chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
+    echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
 
     // Create ChunkDocument
     $doc = new ChunkDocument();
     $doc->content = $chunk['content'];
     $doc->embeddingText = $chunk['content'];
-    $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['name'])) . '_' . $chunk['metadata']['chunk_type'];
-    $doc->entityId = 'project_' . strtolower(str_replace(' ', '_', $chunk['metadata']['name']));
-    $doc->entityType = 'project';
+    $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
+    $doc->entityId = $chunk['metadata']['entityId'];
+    $doc->entityType = $chunk['metadata']['entityType'];
     $doc->entityName = $chunk['metadata']['name'];
     $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
     $doc->tags = $chunk['metadata']['tags'];
     $doc->chunkType = $chunk['metadata']['chunk_type'];
     $doc->sourceName = $chunk['metadata']['url'];
+    $doc->articleTypes = $chunk['metadata']['articleTypes'];
+    $doc->relatedArticles = $chunk['metadata']['relatedArticles'];
 
     if (empty(trim($doc->content))) {
     echo "SKIPPING: Empty content for chunk: " . $doc->chunkId . "\n";
