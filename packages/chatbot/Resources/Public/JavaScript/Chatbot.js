@@ -38,7 +38,7 @@
   if (!fab || !panel || !sendBtn) return;
 
   const url = sendBtn.dataset.url;
-
+  const history = [];
   function setOpen(open) {
     panel.hidden = !open;
     fab.setAttribute('aria-label', open ? 'Close AI Assistant' : 'Open AI Assistant');
@@ -56,25 +56,23 @@
     return el;
   }
 
-  function formatAnswer(text) {
-    return text.replace(/\s*(\d+\.)\s+/g, '\n$1 ').trim();
-  }
-
   async function send() {
     const question = input.value.trim();
     if (!question) return;
     appendMessage(question, 'user');
     input.value = '';
-
+    history.push({ role: 'user', content: question });
     const pending = appendMessage('…', 'ai');
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ 'tx_chatbot_chatbot[question]': question }),
+        body: new URLSearchParams({ 'tx_chatbot_chatbot[history]': JSON.stringify(history), 'tx_chatbot_chatbot[question]': question })
       });
       const data = await res.json();
-      pending.textContent = formatAnswer(data.answer || 'Sorry, something went wrong. Please try again.');
+      const answer = data.answer || 'Sorry, something went wrong. Please try again.';
+      pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
+      history.push({ role: 'assistant', content: data.answer });
     } catch (e) {
       pending.textContent = 'Sorry, something went wrong. Please try again.';
     }

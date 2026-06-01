@@ -37,10 +37,7 @@ final class Voyage4EmbeddingGenerator extends AbstractVoyageAIEmbeddingGenerator
         // echo "Status: " . $response->getStatusCode() . "\n";
         // echo "Response: " . json_encode($json) . "\n";  // remove after debugging
 
-        if (empty($json['data'][0]['embedding'])) {
-            throw new \RuntimeException('Voyage AI error: ' . json_encode($json));
-        }
-        return $json['data'][0]['embedding'];
+        return $json['data'][0]['embedding'] ?? [];
     }
 
     public function getEmbeddingLength(): int
