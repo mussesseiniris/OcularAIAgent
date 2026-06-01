@@ -24,5 +24,5 @@ $chatService = new \Ocular\Chatbot\Service\ChatService($embeddingGenerator, $qdr
 
 // Test ask()
 // $answer = $chatService->ask('Who can I talk to about ux?');
-$answer = $chatService->ask("WHat is ocular's website process?");
+$answer = $chatService->ask("I want to learn more about web development?");
 echo $answer;

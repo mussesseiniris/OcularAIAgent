@@ -17,7 +17,15 @@ chatbotAjax {
         no_cache = 1
         index_enable = 0
     }
-    10 < tt_content.list.20.chatbot_chatbot
+    10 = USER
+    10 {
+        userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+        extensionName = Chatbot
+        pluginName = Chatbot
+        vendorName = Ocular
+        controller = Chat
+        action = ask
+    }
 }
 
 page.includeCSS.ocularChatbot = EXT:chatbot/Resources/Public/Css/ChatbotStyle.css

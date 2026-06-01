@@ -202,15 +202,15 @@ class ChatService
 
         $filter = new Filter();
         if (!empty($detectedServiceTypes)) {
-            $filter->addShould(new MatchAny('service_types', $detectedServiceTypes));
+            $filter->addShould(new MatchAny ('service_types', array_values($detectedServiceTypes)));
         }
         if (!empty($detectedTags)) {
 
-            $filter->addShould(new MatchAny('tags', $detectedTags));
+            $filter->addShould(new MatchAny ('tags', array_values($detectedTags)));
         }
 
         if (!empty($detectedArticleTypes)) {
-            $filter->addShould(new MatchAny('article_type', $detectedArticleTypes));
+            $filter->addShould(new MatchAny ('article_type', array_values($detectedArticleTypes)));
         }
 
         // if (!empty($detectedProcess)) {
@@ -221,6 +221,9 @@ class ChatService
         if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes)|| !empty($detectedProcess)) {
             $searchRequest->setFilter($filter);
         }
+
+        // DEBUG
+        error_log('[ChatService] Qdrant request: ' . json_encode($searchRequest->toArray(), JSON_PRETTY_PRINT));
 
         $response = $this->qdrantVectorStore->client
             ->collections('ocular_chunks')
@@ -234,6 +237,7 @@ class ChatService
 
     public function ask(string $question): string
     {
+        try {
         //step 1: Get relevant chunks from vetor databasde(Qdrant)
         $results = $this->search($question);
         //step 2: Build context from chunks
@@ -260,6 +264,11 @@ class ChatService
         //step 4: Send to LLM and return the answer
         $answer = $this->chat->generateText($prompt);
         return $answer;
+        } catch (\Throwable $e) {
+            error_log('[ChatService] ERROR: ' . $e->getMessage());
+            error_log('[ChatService] Trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 }
  
