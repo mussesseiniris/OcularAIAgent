@@ -222,9 +222,7 @@ class ChatService
             $searchRequest->setFilter($filter);
         }
 
-        // DEBUG
-        error_log('[ChatService] Qdrant request: ' . json_encode($searchRequest->toArray(), JSON_PRETTY_PRINT));
-
+    
         $response = $this->qdrantVectorStore->client
             ->collections('ocular_chunks')
             ->points()
