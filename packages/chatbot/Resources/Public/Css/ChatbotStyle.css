@@ -65,6 +65,30 @@ font-family: 'Montserrat', sans-serif;
   font-size: 14px; line-height: 1.55;
   white-space: pre-wrap; overflow-wrap: break-word;
 }
+
+.chatbot-msg p {
+    margin: 0 0 0.5em 0; 
+}
+
+.chatbot-msg p:last-child {
+    margin-bottom: 0;
+}
+
+.chatbot-msg ul,
+.chatbot-msg ol {
+    margin: 0.3em 0;
+    padding-left: 1.3em;
+}
+
+/* URL link color */
+.chatbot-msg a {
+    color: #ff0081;
+    text-decoration: underline;
+}
+
+.chatbot-msg li {
+    margin: 0.15em 0;
+}
 .chatbot-msg--user {
   align-self: flex-end; max-width: 78%; color: #fff;
   background: linear-gradient(120deg, #ff0081 55%, #ffd400 140%);

@@ -30,7 +30,9 @@ class ChatController extends ActionController
         }
 
         $question = $this->request->getArgument('question');
-        $result = $this->chatService->ask($question);
+        $rawHistory = $this->request->hasArgument('history') ? $this->request->getArgument('history') : '[]';
+        $history = json_decode($rawHistory, true) ?? [];
+        $result = $this->chatService->ask($question,$history);
         return $this->jsonResponse(json_encode(['answer' => $result]));
     }
 }
