@@ -22,14 +22,21 @@ use Http\Discovery\Psr18ClientDiscovery;
 
 echo "Starting ingestion...\n";
 
+$crawlers = [
+    new ProjectsCrawler(),
+    new AboutUsCrawler(),
+    new ArticlesCrawler(),
+    new ServiceCrawler(),
+];
+
 //Crawl and build chunks
 echo "Crawling ocular.nz...\n";
-// $crawler = new ProjectsCrawler();
-// $crawler = new AboutUsCrawler();
-$crawler = new ArticlesCrawler();
-// $crawler = new ServiceCrawler();
-$chunks = $crawler->buildChunks();
-echo "Found " . count($chunks) . " chunks\n";
+// // $crawler = new ProjectsCrawler();
+// // $crawler = new AboutUsCrawler();
+// $crawler = new ArticlesCrawler();
+// // $crawler = new ServiceCrawler();
+// $chunks = $crawler->buildChunks();
+// echo "Found " . count($chunks) . " chunks\n";
 
 //Set up Voyage AI embedding generator
 $embeddingGenerator = new Voyage4EmbeddingGenerator();
@@ -51,44 +58,56 @@ $qdrantIngester = new QdrantIngester(
     null
 );
 
-//Loop through chunks, embed and ingest
-foreach ($chunks as $index => $chunk) {
-    echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
+foreach ($crawlers as $crawler) {
+    
+    $crawlerName = (new \ReflectionClass($crawler))->getShortName();
+    echo "\nCrawling with {$crawlerName}...\n";
 
-    // Create ChunkDocument
-    $doc = new ChunkDocument();
-    $doc->content = $chunk['content'];
-    $doc->embeddingText = $chunk['content'];
-    $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
-    $doc->entityId = $chunk['metadata']['entityId'];
-    $doc->entityType = $chunk['metadata']['entityType'];
-    $doc->entityName = $chunk['metadata']['name'];
-    $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
-    $doc->tags = $chunk['metadata']['tags'];
-    $doc->chunkType = $chunk['metadata']['chunk_type'];
-    $doc->sourceName = $chunk['metadata']['url'];
-    $doc->articleTypes = $chunk['metadata']['articleTypes'];
-    $doc->relatedArticles = $chunk['metadata']['relatedArticles'];
+    $chunks = $crawler->buildChunks();
+    echo "Found " . count($chunks) . " chunks\n";   
 
-    if (empty(trim($doc->content))) {
-    echo "SKIPPING: Empty content for chunk: " . $doc->chunkId . "\n";
-    continue;
-    }   
+    //Loop through chunks, embed and ingest
+    foreach ($chunks as $index => $chunk) {
+        echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
 
-    // Embed
-    $doc = $embeddingGenerator->embedDocument($doc);
-    // Small delay to avoid rate limiting
-    usleep(1000000);
+        // Create ChunkDocument
+        $doc = new ChunkDocument();
+        $doc->content = $chunk['content'];
+        $doc->embeddingText = $chunk['content'];
+        $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
+        $doc->entityId = $chunk['metadata']['entityId'];
+        $doc->entityType = $chunk['metadata']['entityType'];
+        $doc->entityName = $chunk['metadata']['name'];
+        $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
+        $doc->tags = $chunk['metadata']['tags'];
+        $doc->chunkType = $chunk['metadata']['chunk_type'];
+        $doc->sourceName = $chunk['metadata']['url'];
+        $doc->articleTypes = $chunk['metadata']['articleTypes'];
+        $doc->relatedArticles = $chunk['metadata']['relatedArticles'];
+        $doc->url = $chunk['metadata']['url'];
 
-    if (empty($doc->embedding)) {
-    echo "ERROR: Empty embedding for chunk: " . $doc->chunkId . "\n";
-    echo "Content: " . substr($doc->content, 0, 100) . "\n";
-    die();
+        if (empty(trim($doc->content))) {
+        echo "SKIPPING: Empty content for chunk: " . $doc->chunkId . "\n";
+        continue;
+        }   
+
+        // Embed
+        $doc = $embeddingGenerator->embedDocument($doc);
+        // Small delay to avoid rate limiting
+        usleep(1000000);
+
+        if (empty($doc->embedding)) {
+        echo "ERROR: Empty embedding for chunk: " . $doc->chunkId . "\n";
+        echo "Content: " . substr($doc->content, 0, 100) . "\n";
+        die();
+        }
+        // Ingest into Qdrant
+        $qdrantIngester->addDocument($doc);
+
+        echo "Ingested: " . $doc->chunkId . "\n";
     }
-    // Ingest into Qdrant
-    $qdrantIngester->addDocument($doc);
 
-    echo "Ingested: " . $doc->chunkId . "\n";
+   echo "Done with {$crawlerName}!\n";
 }
 
-echo "\nDone! " . count($chunks) . " chunks ingested into Qdrant.\n";
+echo "\nAll crawlers complete!\n";

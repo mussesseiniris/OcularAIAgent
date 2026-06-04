@@ -17,13 +17,13 @@ class ArticlesCrawler
      */
     private array $articleContentTagMap = [
     // Aligned with project tag vocabulary
-    'brand'     => 'Brand',              // was 'Branding'
+    'brand'     => 'Brand',              
     'branding'  => 'Brand',
-    'ux'        => 'UX Design',          // was 'User Experience'
-    'video'     => 'Video',              // was 'Video Production'
-    'web'       => 'Web Development',    // was 'Web'
+    'ux'        => 'UX Design',          
+    'video'     => 'Video',              
+    'web'       => 'Web Development',    
     'website'   => 'Web Development',
-    'campaign'  => 'Campaign',           // was 'Marketing'
+    'campaign'  => 'Campaign',           
     'graphic'   => 'Graphic Design',
 
     // Article-specific tags with no project equivalent
@@ -43,10 +43,9 @@ class ArticlesCrawler
 
 
     /**
-     * Maps the service process article IDs (from ServicesCrawler) to stable IDs.
-     * These are the tx_news URLs from the services page.
-     * We generate the same articleId here so the relatedArticles link in
-     * service chunks resolves correctly to these article chunks.
+     * Maps process article URLs to stable entity IDs.
+     * These IDs match what the ArticleCrawler generates for the same articles,
+     * so that relatedArticles references in service chunks resolve correctly.
      */
     private array $processArticleUrlMap = [
     '/article/the-design-process-at-ocular/'        => 'article_process_design',
@@ -85,7 +84,6 @@ class ArticlesCrawler
         while (!empty($listingUrl)) {
             $html      = $this->client->get($listingUrl)->getBody()->getContents();
             $crawler   = new Crawler($html);
-            $nextUrl   = null;
 
             // Each article card — h4 contains the link, category is nearby text
             $crawler->filter('h4')->each(function (Crawler $node) use (&$articles) {
@@ -165,12 +163,6 @@ class ArticlesCrawler
             // No meta description — will fall back to first paragraph
         }
 
-        // h1 = article title (more reliable than the listing page link text)
-        $title = '';
-        try {
-            $title = trim($crawler->filter('h1')->first()->text());
-        } catch (\Exception $e) {
-        }
 
         // Body content — collect all paragraphs and h2 headings
         // Skip nav elements, back links, footer content
@@ -199,7 +191,6 @@ class ArticlesCrawler
         }
 
         return [
-            'title'       => $title,
             'description' => $description,
             'body'        => implode("\n\n", $bodyParts),
         ];
@@ -229,8 +220,9 @@ class ArticlesCrawler
 
     /**
      * Derives a stable article ID from its URL slug.
-     * For process articles that use tx_news URLs, uses the processArticleUrlMap
-     * to return the same ID that ServicesCrawler baked into relatedArticles.
+     * Process articles that appear on the services page use a hardcoded map
+     * to ensure their IDs match what ServicesCrawler stored in relatedArticles.
+     * All other articles derive their ID from the URL slug.
      *
      * @param string $url
      * @return string
@@ -252,16 +244,10 @@ class ArticlesCrawler
     }
 
     /**
-     * Builds chunks for ingestion. Produces two chunk types per article:
-     *
-     * - article_summary: title + meta description — answers listing-level questions
-     * - article_body: full article content — answers deep content questions
-     *
-     * Tags are auto-detected from title and description using the same vocabulary
-     * as projects so ChatService filter detection works without hardcoding.
-     *
-     * The articleId on each chunk matches the IDs stored in ServicesCrawler's
-     * relatedArticles so Option B fetchByIds() resolves correctly.
+     * 
+     * Builds the full list of chunks by combining metadata from getArticleList()
+     * and content from getArticleDetail(). Each article produces two chunks:
+     * one for the description and one for the detailed content.
      *
      * @return array List of chunks with 'content' and 'metadata'
      */
@@ -308,7 +294,7 @@ class ArticlesCrawler
                 ];
             }
 
-            // Small delay to avoid rate limiting ocular.nz
+            // Small delay to avoid rate limiting 
             usleep(500000);
         }
 

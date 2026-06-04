@@ -105,6 +105,7 @@ class ProjectsCrawler
         $contents = [];
         $projects = $this->getProjectList();
         foreach ($projects as $project) {
+            echo "Scrapping project : {$project['name']}\n";
             $projectDetails = $this->getProjectDetail($project['url']);
 
             //chunk1: short project overview

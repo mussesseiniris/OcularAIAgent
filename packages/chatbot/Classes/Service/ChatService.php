@@ -37,18 +37,6 @@ class ChatService
             ->setWithPayload(true);
 
         $synonymServiceTypeMap = [
-            // 'website development' => 'Digital Platforms',
-            // 'web development' => 'Digital Platforms',
-            // 'platform' => 'Digital Platforms',
-            // 'ux' => 'UX & Experience Design',
-            // 'experience' => 'UX & Experience Design',
-            // 'design' => 'UX & Experience Design', 
-            // 'graphy' => 'Content & Communication',
-            // 'brand' => 'Content & Communication',
-            // 'branding' => 'Content & Communication',
-            // 'video' => 'Content & Communication',
-            // 'intergration' => 'Systems & Integration',
-            // 'ai' => 'Emerging Technology',
             'website development' => 'Platforms',
             'web development' => 'Platforms',
             'platform' => 'Platforms',
@@ -62,35 +50,12 @@ class ChatService
         ];
 
         $knownServiceTypes = [
-            // 'Digital Platforms',
-            // 'UX & Experience Design',
-            // 'Content & Communication',
-            // 'Systems & Integration',
-            // 'Emerging Technology'
             'Platforms',
             'Communication',
             'Experiences',
         ];
 
         $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
-
-        // $processMap = [
-        // 'design'          => 'article_process_design',
-        // 'ux'              => 'article_process_design',
-        // 'experience'      => 'article_process_design',
-        // 'brand'           => 'article_process_design',
-        // 'branding'        => 'article_process_design',
-        // 'web'             => 'article_process_online',
-        // 'website development' => 'article_process_online',
-        // 'typo3 development' => 'article_process_online',
-        // 'platform'        => 'article_process_online',
-        // 'video'           => 'article_process_video',
-        // 'content'         => 'article_process_video',
-        // 'process'         => 'article_process_design', // ← catches "design process" directly
-        // 'CRM'               => 'article_process_online',
-        // 'Platform Architecture'=> 'article_process_online',
-
-        // ];
 
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
@@ -115,18 +80,7 @@ class ChatService
                 $detectedArticleTypes[] = $articleType;
             }
         }
-
         $detectedArticleTypes = array_values(array_unique($detectedArticleTypes));
-
-        // $detectedProcess = [];
-        // foreach($processMap as $keyword => $process) {
-        //     if(stripos($question, $keyword) !== false) {
-        //         $detectedProcess[] = $process;
-        //     }
-        // }
-
-
-
 
 
         $synonymTagsMap = [
@@ -213,11 +167,6 @@ class ChatService
             $filter->addShould(new MatchAny ('article_type', array_values($detectedArticleTypes)));
         }
 
-        // if (!empty($detectedProcess)) {
-        //     $filter->addShould(new MatchAny('entity_id', $detectedProcess));
-        //     $filter->addShould(New MatchAny('related_articles', $detectedProcess));
-        // }
-
         if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes) || !empty($detectedProcess)) {
             $searchRequest->setFilter($filter);
         }
@@ -243,6 +192,7 @@ class ChatService
         $tags = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['tags'] ?? []), $results));
         $relatedArticles = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['related_articles'] ?? []), $results));
         $entityIds = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_id'] ?? '', $results));
+        $url = implode("\n\n", array_map(fn($doc) => $doc['payload']['url'] ?? '', $results));
 
         $systemPrompt = "## Role & Purpose
         You are a website support chatbot for Ocular.

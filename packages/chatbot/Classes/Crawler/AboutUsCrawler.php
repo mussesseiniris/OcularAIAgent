@@ -37,7 +37,7 @@ class AboutUsCrawler
      * Scrapes the about us page and returns structured team member data.
      * Each person is grouped under their department section.
      *
-     * Page structure observed:
+     * Page structure:
      * - h3 tags mark department sections e.g. "Management and Strategy"
      * - Each person block: strong tag (name) followed by em tag (role) inside p tags
      *
@@ -130,10 +130,6 @@ class AboutUsCrawler
      * - agency: one company overview chunk
      * - person: one chunk per team member
      * - department: one chunk per department summarising who works there
-     *
-     * The serviceTypes and tags on each chunk use the same vocabulary as
-     * projects so ChatService filter detection works across entity types.
-     *
      * @return array List of chunks with 'content' and 'metadata'
      */
     public function buildChunks(): array
@@ -173,7 +169,7 @@ class AboutUsCrawler
                     'entityId'     => 'person_' . strtolower(str_replace([' ', "'"], ['_', ''], $member['name'])),
                     'entityName'   => $member['name'],
                     'chunk_type'    => 'team_member',
-                    'role'         => $member['role'],
+                    // 'role'         => $member['role'],
                     'department'   => $member['department'],
                     'serviceTypes' => $member['serviceTypes'],
                     'tags'         => $member['tags'],
