@@ -29,14 +29,7 @@ $crawlers = [
     new ServiceCrawler(),
 ];
 
-//Crawl and build chunks
 echo "Crawling ocular.nz...\n";
-// // $crawler = new ProjectsCrawler();
-// // $crawler = new AboutUsCrawler();
-// $crawler = new ArticlesCrawler();
-// // $crawler = new ServiceCrawler();
-// $chunks = $crawler->buildChunks();
-// echo "Found " . count($chunks) . " chunks\n";
 
 //Set up Voyage AI embedding generator
 $embeddingGenerator = new Voyage4EmbeddingGenerator();
@@ -59,7 +52,7 @@ $qdrantIngester = new QdrantIngester(
 );
 
 foreach ($crawlers as $crawler) {
-    
+
     $crawlerName = (new \ReflectionClass($crawler))->getShortName();
     echo "\nCrawling with {$crawlerName}...\n";
 
