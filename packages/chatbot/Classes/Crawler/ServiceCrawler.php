@@ -11,15 +11,23 @@ class ServiceCrawler
 {
     private Client $client;
 
+    /*
+    * Maps the 3 services to the 3 categories used in projects list page
+    */
     private array $serviceToServiceTypeMap = [
     'Digital Platforms'       => 'Platforms',
     'Content & Communication' => 'Communication',
     'UX & Experience Design'  => 'Experiences',
     'Systems & Integration'   => 'Platforms',
     'Emerging Technology'     => '', 
-];
+    ];
 
-private array $serviceToTagsMap = [
+    /*
+    * Services mapped to related tags. Tags the same used for 
+    * projects page
+    */
+
+    private array $serviceToTagsMap = [
     'Digital Platforms' => [
         'Web Development',
         'Platform Architecture',
@@ -40,15 +48,16 @@ private array $serviceToTagsMap = [
         'Platform Architecture',
     ],
     'Emerging Technology' => [], // no matching tags in knownTags yet
-];
+    ];
 
-    /**
-     * Process article URLs scraped directly from the services page.
-     * These are the explicit "Our process for X" links Ocular has already made.
-     * Stored here so we can bake them into the service chunk metadata at ingest time.
+  /**
+     * Maps Ocular service categories to their corresponding process articles.
+     * These are the "Our process for X" articles linked from the services page.
+     * Stored here so the service category's process article URL and stable ID
+     * can be baked into service chunk metadata at ingest time, allowing the LLM
+     * to reference the correct article when answering process-related questions.
      *
-     * These URLs use the tx_news query string pattern on the articles-single page.
-     * We derive a stable article ID from the news ID in the URL.
+     * Note: 'Emerging Technology' is omitted as no process article exists for it.
      */
     private array $serviceProcessArticleMap = [
     'UX & Experience Design' => [
@@ -80,15 +89,6 @@ private array $serviceToTagsMap = [
 
     /**
      * Scrapes the services page and returns structured data per service.
-     *
-     * Page structure observed:
-     * - Each service is introduced by an h2 heading (Design, Online, Video)
-     * - Followed by an h3 tagline
-     * - Followed by paragraphs describing the service
-     * - Followed by two links: case studies and process article
-     *
-     * We walk h2 and p tags sequentially, grouping paragraphs under
-     * the current service heading until the next h2 is encountered.
      *
      * @return array List of services with name, description, serviceType, tags, processArticle
      */
@@ -164,16 +164,12 @@ private array $serviceToTagsMap = [
     }
 
     /**
-     * Builds chunks for ingestion. Produces two chunk types per service:
+     * Builds chunks for ingestion. Produces one chunk per service:
      *
-     * - service_overview: tagline + description — answers "What does Ocular offer for branding?"
-     * - service_process: links to the process article via relatedArticles metadata field
-     *   This is the Option B explicit link — baked in at ingest time.
-     *   ChatService can use relatedArticles to fetch the process article chunk directly.
-     *
-     * serviceTypes and tags use the same vocabulary as projects so the existing
-     * ChatService filter detection routes queries correctly without code changes.
-     *
+     * - service_overview: tagline + description — answers "What does Ocular offer for X?"
+     *   Includes a relatedArticles reference to the process article for that service
+     *   category, so the LLM can point users to further reading on how Ocular works.
+     * 
      * @return array List of chunks with 'content' and 'metadata'
      */
     public function buildChunks(): array
@@ -182,9 +178,8 @@ private array $serviceToTagsMap = [
         $services = $this->getServices();
 
         foreach ($services as $service) {
+            echo "Scrapping : {$service['name']}\n";
             $content = "{$service['name']}: {$service['tagline']}\n\n{$service['description']}";
-
-            // Chunk 1: Service overview with explicit process article link (Option B)
             $chunks[] = [
                 'content'  => $content,
                 'metadata' => [
@@ -195,7 +190,7 @@ private array $serviceToTagsMap = [
                     'chunkType'       => 'service_overview',
                     'serviceTypes'    => [$service['serviceType']],
                     'tags'            => $service['tags'],
-                    // Option B: explicit article ID baked in — ChatService fetchByIds() uses this
+                    // explicit article ID baked in — ChatService fetchByIds() uses this
                     'relatedArticles' => $service['processArticle']
                         ? [$service['processArticle']['articleId']]
                         : [],

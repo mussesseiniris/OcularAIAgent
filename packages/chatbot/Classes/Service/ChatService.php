@@ -38,18 +38,6 @@ class ChatService
             ->setWithPayload(true);
 
         $synonymServiceTypeMap = [
-            // 'website development' => 'Digital Platforms',
-            // 'web development' => 'Digital Platforms',
-            // 'platform' => 'Digital Platforms',
-            // 'ux' => 'UX & Experience Design',
-            // 'experience' => 'UX & Experience Design',
-            // 'design' => 'UX & Experience Design', 
-            // 'graphy' => 'Content & Communication',
-            // 'brand' => 'Content & Communication',
-            // 'branding' => 'Content & Communication',
-            // 'video' => 'Content & Communication',
-            // 'intergration' => 'Systems & Integration',
-            // 'ai' => 'Emerging Technology',
             'website development' => 'Platforms',
             'web development' => 'Platforms',
             'platform' => 'Platforms',
@@ -63,18 +51,12 @@ class ChatService
         ];
 
         $knownServiceTypes = [
-            // 'Digital Platforms',
-            // 'UX & Experience Design',
-            // 'Content & Communication',
-            // 'Systems & Integration',
-            // 'Emerging Technology'
             'Platforms',
             'Communication',
             'Experiences',
         ];
 
         $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
-
 
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
@@ -99,7 +81,6 @@ class ChatService
                 $detectedArticleTypes[] = $articleType;
             }
         }
-
         $detectedArticleTypes = array_values(array_unique($detectedArticleTypes));
 
 
@@ -187,11 +168,6 @@ class ChatService
             $filter->addShould(new MatchAny ('article_type', array_values($detectedArticleTypes)));
         }
 
-        // if (!empty($detectedProcess)) {
-        //     $filter->addShould(new MatchAny('entity_id', $detectedProcess));
-        //     $filter->addShould(New MatchAny('related_articles', $detectedProcess));
-        // }
-
         if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes) || !empty($detectedProcess)) {
             $searchRequest->setFilter($filter);
         }
@@ -234,7 +210,7 @@ class ChatService
         $tags = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['tags'] ?? []), $results));
         $relatedArticles = implode("\n\n", array_map(fn($doc) => implode(', ', $doc['payload']['related_articles'] ?? []), $results));
         $entityIds = implode("\n\n", array_map(fn($doc) => $doc['payload']['entity_id'] ?? '', $results));
-        $url = implode("\n\n", array_map(fn($doc) => $doc['payload']['url'], $results));
+        $url = implode("\n\n", array_map(fn($doc) => $doc['payload']['url'] ?? '', $results));
 
         $systemPrompt = "## Role & Purpose
         You are a website support chatbot for Ocular.
