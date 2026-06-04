@@ -32,4 +32,10 @@ services:
     arguments:
       $apiKey: "%env(GROQ_API_KEY)%"
       $url: "https://api.groq.com/openai/v1/"
-      $model: "llama-3.1-8b-instant"
+      # $model: "llama-3.1-8b-instant"
+      $model: "qwen/qwen3-32b"
+      $modelOptions:
+        temperature: 0.3
+        max_tokens: 1536
+        reasoning_effort: default
+        reasoning_format: hidden
