@@ -216,7 +216,7 @@ ddev restart
 ddev exec php vendor/bin/typo3 cache:flush
 ```
 
-## Qdrant Setup
+## Qdrant and Voyage AI Setup
 
 1. Create `.ddev/docker-compose.qdrant.yaml` with the following content:
    
@@ -270,6 +270,43 @@ ddev dotenv set .ddev/.env --voyage-ai-api-key=your_key_here
 
 8. Restart DDEV
 ddev restart
+
+## Rate limit of questions setup
+
+Every time user sends message, their IP is looked up in a MySQL databae and their count is increased by 1 (if no record yet, new row with their IP is created with count = 1), and block them if they have exceeded the number of question limit. 
+
+Record of number of questions per IP resets after 24 hours by checking timestamp of when counting started. 
+
+Current rate limit = 10, and reset time window = 24 hours.
+
+Setting up MySQl database that records IP of user, counts number of questions and records timestamp of most recent question asked:
+
+Option 1: Through TYPO3 Backend 
+  * Go to `https://ocular-typo3-extension.ddev.site/typo3`
+  * Log in as admin
+  * Go to Admin Tools -> Maitenance 
+  * Click Analyse Database Structure
+  * Apply the changes 
+
+Option 2: Create table manually via MySQL
+  * ```bash 
+      ddev my sql
+    ```
+  * ```bash 
+    USE db;
+    CREATE TABLE tx_chatbot_rate_limit (
+      ip_hash VARCHAR(64) NOT NULL DEFAULT '',
+      question_count INT NOT NULL DEFAULT 0,
+      started_at INT NOT NULL DEFAULT 0,
+      PRIMARY KEY (ip_hash)
+    );
+  * Verify it worked;
+    ```bash
+    SHOW TABLES;
+    ```
+
+
+
    
 
 

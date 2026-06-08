@@ -69,11 +69,17 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 'tx_chatbot_chatbot[history]': JSON.stringify(history), 'tx_chatbot_chatbot[question]': question })
       });
+
+      // const text = await res.text();
+      // console.log('Raw response:', text);
+      // const data = JSON.parse(text);
+
       const data = await res.json();
       const answer = data.answer || 'Sorry, something went wrong. Please try again.';
       pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
       history.push({ role: 'assistant', content: data.answer });
     } catch (e) {
+      console.error('Chatbot error:', e);
       pending.textContent = 'Sorry, something went wrong. Please try again.';
     }
     messages.scrollTop = messages.scrollHeight;
