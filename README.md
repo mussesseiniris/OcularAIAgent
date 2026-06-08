@@ -273,13 +273,13 @@ ddev restart
 
 ## Rate limit of questions setup
 
-Every time user sends message, their IP is looked up in a MySQL databae and their count is increased by 1 (if no record yet, new row with their IP is created with count = 1), and block them if they have exceeded the number of question limit. 
+Every time user sends message, their IP is looked up in a MySQL database and their count is increased by 1 (if no record yet, new row with their IP is created with count = 1), and block them if they have exceeded the number of question limit. 
 
 Record of number of questions per IP resets after 24 hours by checking timestamp of when counting started. 
 
 Current rate limit = 10, and reset time window = 24 hours.
 
-Setting up MySQl database that records IP of user, counts number of questions and records timestamp of most recent question asked:
+Setting up MySQl database that records IP of user, counts number of questions and records timestamp of when counting started:
 
 Option 1: Through TYPO3 Backend 
   * Go to `https://ocular-typo3-extension.ddev.site/typo3`
