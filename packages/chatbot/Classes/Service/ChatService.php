@@ -54,9 +54,7 @@ class ChatService
             'Platforms',
             'Communication',
             'Experiences',
-        ];
-
-        $knownArticleTypes = ['Industry Insights', 'Updates', 'Live Work Bay'];
+        ];        
 
         $detectedServiceTypes = [];
         foreach ($knownServiceTypes as $serviceType) {
@@ -74,6 +72,11 @@ class ChatService
         }
         $detectedServiceTypes = array_values(array_unique($detectedServiceTypes));
 
+        $knownArticleTypes = [
+            'Industry Insights', 
+            'Updates', 
+            'Live Work Bay'
+        ];
 
         $detectedArticleTypes = [];
         foreach ($knownArticleTypes as $articleType) {
@@ -82,6 +85,25 @@ class ChatService
             }
         }
         $detectedArticleTypes = array_values(array_unique($detectedArticleTypes));
+
+
+        $entityTypeKeywords = [
+            'service'  => ['services', 'what do you offer', 'offerings', 'capabilities', 'what can you do', 'what does ocular do', 'help with'],
+            'project'  => ['projects', 'case studies', 'portfolio', 'examples', 'clients'],
+            'person'   => ['who', 'team', 'staff', 'people', 'talk to', 'speak to'],
+            'article'  => ['article', 'articles', 'blog', 'read', 'insight', 'guide', 'post'],
+            'agency'   => ['about ocular', 'about you', 'who are you', 'what is ocular', 'company'],
+        ];
+
+        $detectedEntityTypes = [];
+        foreach ($entityTypeKeywords as $entityType => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (stripos($question, $keyword) !== false) {
+                    $detectedEntityTypes[] = $entityType;
+                    break; // only breaks inner loop, moves to next entity type
+                }
+            }
+        }
 
 
         $synonymTagsMap = [
@@ -168,7 +190,11 @@ class ChatService
             $filter->addShould(new MatchAny ('article_type', array_values($detectedArticleTypes)));
         }
 
-        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes) || !empty($detectedProcess)) {
+        if (!empty($detectedEntityTypes)) {
+            $filter->addMust(new MatchAny('entity_type', $detectedEntityTypes));
+        }
+
+        if (!empty($detectedServiceTypes) || !empty($detectedTags) || !empty($detectedArticleTypes) || !empty($detectedEntityTypes)) {
             $searchRequest->setFilter($filter);
         }
 
