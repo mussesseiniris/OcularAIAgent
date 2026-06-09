@@ -178,6 +178,7 @@ class ChatService
         $detectedTags = array_values(array_unique($detectedTags));
 
         $filter = new Filter();
+        $filter->addMustNot(new MatchAny('entity_type', ['project']));
         if (!empty($detectedServiceTypes)) {
             $filter->addShould(new MatchAny ('service_types', array_values($detectedServiceTypes)));
         }
