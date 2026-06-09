@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b65c3e8b3c7d193dff9f19704ae5fcc4",
+    "content-hash": "8332f0a72472558096adcb1e4c9ce341",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1452,7 +1452,7 @@
         },
         {
             "name": "ocular/chatbot",
-            "version": "dev-feature/ocular-crawler",
+            "version": "dev-feature/positioningpdf-crawler",
             "dist": {
                 "type": "path",
                 "url": "packages/chatbot",

@@ -8,6 +8,8 @@ services:
     resource: "../Classes/*"
     exclude: "../Classes/Domain/Model/*"
 
+  Ocular\Chatbot\Service\RateLimitService: ~
+  
   # Voyage AI - generates embeddings for search queries
   LLPhant\Embeddings\EmbeddingGenerator\VoyageAI\Voyage4EmbeddingGenerator: ~
 
@@ -35,7 +37,7 @@ services:
       # $model: "llama-3.1-8b-instant"
       $model: "qwen/qwen3-32b"
       $modelOptions:
-        temperature: 0.3
+        temperature: 0.0
         max_tokens: 1536
         reasoning_effort: default
         reasoning_format: hidden

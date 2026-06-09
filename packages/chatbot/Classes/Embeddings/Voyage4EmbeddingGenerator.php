@@ -35,7 +35,7 @@ final class Voyage4EmbeddingGenerator extends AbstractVoyageAIEmbeddingGenerator
         $json = json_decode($response->getBody()->getContents(), true);
 
         // echo "Status: " . $response->getStatusCode() . "\n";
-        // echo "Response: " . json_encode($json) . "\n";  // remove after debugging
+        // echo "Response: " . json_encode($json) . "\n";
 
         return $json['data'][0]['embedding'] ?? [];
     }

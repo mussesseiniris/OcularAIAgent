@@ -25,6 +25,7 @@ class ArticlesCrawler
     'website'   => 'Web Development',
     'campaign'  => 'Campaign',           
     'graphic'   => 'Graphic Design',
+    'online projects'    => 'Web Development',
 
     // Article-specific tags with no project equivalent
     'strategy'  => 'Strategy',
@@ -32,13 +33,14 @@ class ArticlesCrawler
     'design'    => 'Design Thinking',
     'digital'   => 'Digital',
     'platform'  => 'Platform Architecture',
+    'online projects'    => 'Process',
 
     // Content type signals
     'how to'    => 'Guide',
     'why'       => 'Opinion',
     'what is'   => 'Explainer',
-    'our'       => 'Agency Insight',
-    'we '       => 'Agency Insight',
+    // 'our'       => 'Agency Insight',
+    // 'we '       => 'Agency Insight',
     ];
 
 
@@ -75,6 +77,8 @@ class ArticlesCrawler
      *
      * @return array List of articles with url, title, category, summary
      */
+
+
     public function getArticleList(): array
     {
         $articles   = [];
@@ -105,6 +109,7 @@ class ArticlesCrawler
                 // Category sits as text in a sibling or parent element near the h4
                 // On the listing page the category appears as plain text after the h4 link
                 $articleTypes = [];
+                $tags=[];
                 try {
                     // Try to get the next sibling text node containing the category
                     $parentText = trim($node->closest('article, .news-item, li, div')->text());
@@ -112,6 +117,8 @@ class ArticlesCrawler
                     foreach ($this->knownArticleType as $cat) {
                         if (str_contains($parentText, $cat)) {
                             $articleTypes[] = $cat;
+                        } else {
+                            $tags[] = $cat;
                         }
                     }
                 } catch (\Exception $e) {
@@ -121,6 +128,7 @@ class ArticlesCrawler
                 $articles[] = [
                     'url'      => $url,
                     'title'    => $title,
+                    'tags'     => $tags,
                     'articleType' => $articleTypes,
                 ];
             });

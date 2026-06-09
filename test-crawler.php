@@ -1,10 +1,10 @@
 <?php
-// require_once 'vendor/autoload.php';
-// $crawler = new \Ocular\Chatbot\Crawler\ProjectsCrawler();
-// echo "\n=== Chunks ===\n";
-// $chunks = $crawler->buildChunks();
-// echo "Found " . count($chunks) . " chunks\n\n";
-// print_r($chunks);
+require_once 'vendor/autoload.php';
+$crawler = new \Ocular\Chatbot\Crawler\ProjectsCrawler();
+echo "\n=== Chunks ===\n";
+$chunks = $crawler->buildChunks();
+echo "Found " . count($chunks) . " chunks\n\n";
+print_r($chunks);
 
 
 // require_once 'vendor/autoload.php';
@@ -25,9 +25,9 @@
 // print_r($chunks);
 
 
-require_once 'vendor/autoload.php';
-$crawler = new \Ocular\Chatbot\Crawler\ServiceCrawler();
-echo "\n=== Chunks ===\n";
-$chunks = $crawler->buildChunks();
-echo "Found " . count($chunks) . " chunks\n\n";
-print_r($chunks);
+// require_once 'vendor/autoload.php';
+// $crawler = new \Ocular\Chatbot\Crawler\ServiceCrawler();
+// echo "\n=== Chunks ===\n";
+// $chunks = $crawler->buildChunks();
+// echo "Found " . count($chunks) . " chunks\n\n";
+// print_r($chunks);
