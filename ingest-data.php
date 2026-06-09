@@ -17,16 +17,16 @@ use Ocular\Chatbot\Service\QdrantIngester;
 use Qdrant\Config;
 use Qdrant\Http\Transport;
 use Http\Discovery\Psr18ClientDiscovery;
-
-
+use Ocular\Chatbot\Crawler\PositioningPdfCrawler;
 
 echo "Starting ingestion...\n";
 
 $crawlers = [
-    new ProjectsCrawler(),
-    new AboutUsCrawler(),
-    new ArticlesCrawler(),
-    new ServiceCrawler(),
+    // new ProjectsCrawler(),
+    // new AboutUsCrawler(),
+    // new ArticlesCrawler(),
+    // new ServiceCrawler(),
+    new PositioningPdfCrawler(),
 ];
 
 //Crawl and build chunks
@@ -50,6 +50,9 @@ if (empty($testEmbedding)) {
     die("ERROR: Voyage AI returned empty embedding. Check your API key.\n");
 }
 
+echo "Waiting 21s to avoid rate limiting...\n";
+sleep(21);
+
 //Set up Qdrant ingester
 $config = new Config('qdrant', 6333);
 $qdrantIngester = new QdrantIngester(
@@ -68,7 +71,7 @@ foreach ($crawlers as $crawler) {
 
     //Loop through chunks, embed and ingest
     foreach ($chunks as $index => $chunk) {
-        echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['name'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
+        echo "Embedding chunk " . ($index + 1) . " of " . count($chunks) . ": " . $chunk['metadata']['entityName'] . " (" . $chunk['metadata']['chunk_type'] . ")\n";
 
         // Create ChunkDocument
         $doc = new ChunkDocument();
@@ -77,7 +80,7 @@ foreach ($crawlers as $crawler) {
         $doc->chunkId = 'chunk_' . strtolower(str_replace(' ', '_', $chunk['metadata']['entityId'])) . '_' . $chunk['metadata']['chunk_type'];
         $doc->entityId = $chunk['metadata']['entityId'];
         $doc->entityType = $chunk['metadata']['entityType'];
-        $doc->entityName = $chunk['metadata']['name'];
+        $doc->entityName = $chunk['metadata']['entityName'];
         $doc->serviceTypes = $chunk['metadata']['serviceTypes'];
         $doc->tags = $chunk['metadata']['tags'];
         $doc->chunkType = $chunk['metadata']['chunk_type'];
@@ -94,17 +97,17 @@ foreach ($crawlers as $crawler) {
         // Embed
         $doc = $embeddingGenerator->embedDocument($doc);
         // Small delay to avoid rate limiting
-        usleep(1000000);
+        usleep(21000000);
 
         if (empty($doc->embedding)) {
-        echo "ERROR: Empty embedding for chunk: " . $doc->chunkId . "\n";
+        // echo "ERROR: Empty embedding for chunk: " . $doc->chunkId . "\n";
         echo "Content: " . substr($doc->content, 0, 100) . "\n";
         die();
         }
         // Ingest into Qdrant
         $qdrantIngester->addDocument($doc);
 
-        echo "Ingested: " . $doc->chunkId . "\n";
+        // echo "Ingested: " . $doc->chunkId . "\n";
     }
 
    echo "Done with {$crawlerName}!\n";
