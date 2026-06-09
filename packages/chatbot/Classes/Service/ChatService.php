@@ -26,7 +26,7 @@ class ChatService
         $this->chat = $chat;
     }
 
-    public function search(string $question, int $limit = 5): array
+    public function search(string $question, int $limit = 6): array
     {
         // Generate embedding for the question
         $questionEmbedding = $this->voyage4EmbeddingGenerator->embedText($question);
