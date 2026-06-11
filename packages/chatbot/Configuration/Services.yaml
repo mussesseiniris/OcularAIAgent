@@ -9,6 +9,13 @@ services:
     exclude: "../Classes/Domain/Model/*"
 
   Ocular\Chatbot\Service\RateLimitService: ~
+
+  Ocular\Chatbot\Command\CleanupRateLimitCommand:
+    tags:
+        - name: 'console.command'
+          command: 'chatbot:cleanup-ratelimit'
+          description: 'Deletes rate limit records older than 24 hours'
+          schedulable: true
   
   # Voyage AI - generates embeddings for search queries
   LLPhant\Embeddings\EmbeddingGenerator\VoyageAI\Voyage4EmbeddingGenerator: ~
