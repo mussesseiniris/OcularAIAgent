@@ -6,6 +6,10 @@ defined('TYPO3') or die();
     '@import "EXT:chatbot/Configuration/TypoScript/setup.typoscript"'
 );
 
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptConstants(
+    '@import "EXT:chatbot/Configuration/TypoScript/constants.typoscript"'
+);
+
 (function () {
     \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
         'Chatbot',
