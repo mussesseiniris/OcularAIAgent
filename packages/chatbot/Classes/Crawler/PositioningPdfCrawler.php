@@ -21,13 +21,6 @@ class PositioningPdfCrawler
     {
         $parser = new Parser();
         $pdf = $parser->parseFile($this->pdfPath);
-        // $pages = $pdf->getPages();
-        // $text  = $pages[4]->getText();
-        // $text = $pdf->getText();
-        // $metadata = $pdf->getDetails();
-        // var_dump($metadata);
-        // $paragraphs = preg_split('/\n{2,}/', $text);
-        // $paragraphs = array_values(array_filter(array_map('trim', $paragraphs), fn($p) => strlen($p) > 50));
         $pages = $pdf->getPages();
         $paragraphs = [];
         foreach ([3, 4, 6] as $pageIndex) {
