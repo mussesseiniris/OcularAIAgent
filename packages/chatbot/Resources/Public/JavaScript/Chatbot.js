@@ -50,16 +50,10 @@
   }
 
   fab.addEventListener('click', () => {
-    setOpen(panel.hidden);
-    if (!humanVerified && panel.hidden) {
-      tunrstileToken.execute(document.getElementById('cf-turnstile'));
-      console.log('[Turnstile] widget found:', widget);
-      console.log('[Turnstile] turnstile object:', typeof turnstile);
-      if (typeof turnstile !== 'undefined' && widget) {
-          turnstile.execute(widget);
-      } else {
-          console.warn('[Turnstile] not ready — widget:', widget, 'turnstile:', typeof turnstile);
-      }
+    const opening = panel.hidden;
+    setOpen(opening);
+    if (!humanVerified && opening) {
+      turnstile.execute(document.getElementById('cf-turnstile'));
     }
   });
 
