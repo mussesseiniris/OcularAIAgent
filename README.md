@@ -305,7 +305,16 @@ Option 2: Create table manually via MySQL
     SHOW TABLES;
     ```
 
+## Turnstile setup
 
+Currently siteKey is test siteKey = 1x00000000000000000000AA located in constants.typoscript as private key is also a test private key.
+Add in ddev .env file: 
+
+```bash
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+Can change both test siteKey and private key to real ones when creating a widget for own domain in Cloudflare.
 
    
 

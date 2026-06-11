@@ -51,7 +51,7 @@ class ChatController extends ActionController
 
 
                 if (!$this->verifyTurnstile($token)) {
-                    error_log('[Turnstile] Blocked request from IP: ' . $ip);
+                    error_log( '[Turnstile] Blocked request from IP: ' . $ip);
                     return $this->jsonResponse(json_encode([
                         'answer' => 'Verification failed. Please try again.'
                     ]));
