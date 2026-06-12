@@ -40,9 +40,6 @@
   const url = sendBtn.dataset.url;
   const history = [];
 
-  let turnstileToken = null;
-  let humanVerified = false;
-
   function setOpen(open) {
     panel.hidden = !open;
     fab.setAttribute('aria-label', open ? 'Close AI Assistant' : 'Open AI Assistant');
@@ -50,19 +47,10 @@
   }
 
   fab.addEventListener('click', () => {
-    const opening = panel.hidden;
-    setOpen(opening);
-    if (!humanVerified && opening) {
-      turnstile.execute(document.getElementById('cf-turnstile'));
-    }
+    setOpen(panel.hidden);
   });
 
   closeBtn.addEventListener('click', () => setOpen(false));
-
-  window.onTurnstileSuccess = function(token) {
-    turnstileToken = token;
-    console.log('[Turnstile] token received');
-  }
 
   function appendMessage(text, role) {
     const el = document.createElement('div');
@@ -73,6 +61,30 @@
     return el;
   }
 
+  function getFreshToken() {
+    return new Promise((resolve, reject) => {
+      const container = document.getElementById('cf-turnstile');
+      console.log('[Turnstile] container found:', container);
+      console.log('[Turnstile] window.turnstile exists:', !!window.turnstile);
+      if (!container || !window.turnstile) {
+        console.log('[Turnstile] Skipping — resolving empty');
+        resolve(''); // No Turnstile available (dev environment)
+        return;
+      }
+      turnstile.reset(container);
+      turnstile.execute(container, {
+        callback: (token) => {
+                console.log('[Turnstile] Token received:', token ? 'yes' : 'empty');
+                resolve(token);
+            },
+            'error-callback': (err) => {
+                console.log('[Turnstile] Error:', err);
+                reject(new Error('Turnstile verification failed'));
+            },
+        });
+    });
+  }
+
   async function send() {
     const question = input.value.trim();
     if (!question) return;
@@ -81,21 +93,30 @@
     history.push({ role: 'user', content: question });
     const pending = appendMessage('…', 'ai');
 
+
+    try {
+      token = await getFreshToken();
+    } catch (e) {
+      pending.textContent = 'Bot verification failed. Please refresh and try again.';
+      return;
+    }
+
+
+
     const body = {
       'tx_chatbot_chatbot[question]': question,
       'tx_chatbot_chatbot[history]': JSON.stringify(history),
     };
 
-    if (!humanVerified && turnstileToken) {
-        body['tx_chatbot_chatbot[turnstileToken]'] = turnstileToken;
-    }
-
-
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(body)
+        body: new URLSearchParams({
+          'tx_chatbot_chatbot[question]': question,
+          'tx_chatbot_chatbot[history]': JSON.stringify(history),
+          'tx_chatbot_chatbot[turnstileToken]': token,
+        })
       });
 
       // const text = await res.text();

@@ -28,42 +28,37 @@ class ChatController extends ActionController
      */
     public function askAction(): ResponseInterface
     {   
+        error_log('[ChatController] askAction called');
+        error_log('[ChatController] token argument: ' . ($this->request->hasArgument('turnstileToken') ? 'present' : 'MISSING'));
+        error_log('[ChatController] secret key set: ' . (empty(getenv('TURNSTILE_SECRET_KEY')) ? 'NO' : 'yes'));
         try {
+
+            $secretKey = getenv('TURNSTILE_SECRET_KEY');
+            if (empty($secretKey)) {
+                error_log('[Turnstile] TURNSTILE_SECRET_KEY is not set — blocking all requests');
+                return $this->jsonResponse(json_encode([
+                    'answer' => 'Service configuration error. Please contact us at results@ocular.nz.'
+                ]));
+            }
+
+            $token = $this->request->hasArgument('turnstileToken')
+                ? $this->request->getArgument('turnstileToken')
+                : '';
+
+
+            if (!$this->verifyTurnstile($token, $secretKey)) {
+                error_log('[Turnstile] Blocked request from IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                return $this->jsonResponse(json_encode([
+                    'answer' => 'Verification failed. Please try again.'
+                ]));
+            }
+            
             //Get user IP as the rate limit key
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
             if (!$this->rateLimitService->isAllowed($ip)) {
                 return $this->jsonResponse(json_encode([
                     'answer' => 'You have reached the daily question limit. Please try again tomorrow or contact us at results@ocular.nz for further help.'
                 ]));
-            }
-
-
-            $sessionVerified = $_SESSION['turnstile_verified'] ?? false;
-            error_log('[Turnstile] Session already verified: ' . ($sessionVerified ? 'yes' : 'no'));
-
-            if (!$sessionVerified) {
-                // First message — must have a valid token
-                $token = $this->request->hasArgument('turnstileToken')
-                    ? $this->request->getArgument('turnstileToken')
-                    : '';
-
-                error_log('[Turnstile] Token received: ' . (empty($token) ? 'MISSING' : 'present'));
-
-
-                if (!$this->verifyTurnstile($token)) {
-                    error_log( '[Turnstile] Blocked request from IP: ' . $ip);
-                    return $this->jsonResponse(json_encode([
-                        'answer' => 'Verification failed. Please try again.'
-                    ]));
-                }
-
-                $_SESSION['turnstile_verified'] = true;
-                error_log('[Turnstile] Session marked as verified for IP: ' . $ip);
-
-                $verified = true;
-            } else {
-                error_log('[Turnstile] Skipping verification — already verified this session');
-                $verified = true;
             }
 
             if (!$this->request->hasArgument('question')) {
@@ -74,31 +69,23 @@ class ChatController extends ActionController
             $rawHistory = $this->request->hasArgument('history') ? $this->request->getArgument('history') : '[]';
             $history = json_decode($rawHistory, true) ?? [];
             $result = $this->chatService->ask($question,$history);
-            return $this->jsonResponse(json_encode([
-                'answer' => $result,
-                'verified' => $verified
-                ]));
+            return $this->jsonResponse(json_encode(['answer' => $result]));
             
         } catch (\Throwable $e) {
-            error_log('[Turnstile] ERROR: ' . $e->getMessage());
+            error_log('[ChatController] ERROR: ' . $e->getMessage());
             return $this->jsonResponse(json_encode([
-            'answer' => 'DEBUG: ' . $e->getMessage()
+            'answer' => 'Something went wrong. Please try again.'
             ]));
         }
     }
 
-    private function verifyTurnstile(string $token): bool
+    private function verifyTurnstile(string $token, string $secretKey): bool
     {
         $secretKey = getenv('TURNSTILE_SECRET_KEY');
 
-        if (empty($secretKey)) {
-            error_log('[Turnstile] No secret key configured — skipping verification');
-            return true;
-        }
-
         if (empty($token)) {
             error_log('[Turnstile] Empty token — verification failed');
-            return false;
+            return false; 
         }
 
         try {
