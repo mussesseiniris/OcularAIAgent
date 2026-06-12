@@ -9,10 +9,10 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 class RateLimitService
 {
     // Maximum questions allowed per 24 hour window
-    private const LIMIT = 10;
+    private const LIMIT = 200;
     
     // 24 hours in seconds
-    private const WINDOW = 86400;
+    private const WINDOW = 864000;
 
     private ConnectionPool $connectionPool;
 
