@@ -103,7 +103,7 @@ return [
         ],
         'devIPmask' => '',
         'displayErrors' => 1,
-        'encryptionKey' => '8db02365193c12d6554b2d99623dd5f1988b0678668217782c320fcf6e3845520a6eaceca2f971a6e619798b11e456b0',
+        'encryptionKey' => '',
         'exceptionalErrors' => 4096,
         'features' => [
             'extbase.consistentDateTimeHandling' => true,
