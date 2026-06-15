@@ -103,10 +103,10 @@
 
 
 
-    const body = {
-      'tx_chatbot_chatbot[question]': question,
-      'tx_chatbot_chatbot[history]': JSON.stringify(history),
-    };
+    // const body = {
+    //   'tx_chatbot_chatbot[question]': question,
+    //   'tx_chatbot_chatbot[history]': JSON.stringify(history),
+    // };
 
     try {
       const res = await fetch(url, {
@@ -125,10 +125,10 @@
 
       const data = await res.json();
 
-      if (data.verified) {
-        humanVerified = true;
-        turnstileToken = null;
-      }
+      // if (data.verified) {
+      //   humanVerified = true;
+      //   turnstileToken = null;
+      // }
 
       const answer = data.answer || 'Sorry, something went wrong. Please try again.';
       pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
