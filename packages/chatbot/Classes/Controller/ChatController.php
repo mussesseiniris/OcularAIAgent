@@ -52,17 +52,18 @@ class ChatController extends ActionController
                     'answer' => 'Verification failed. Please try again.'
                 ]));
             }
+
+            if (!$this->request->hasArgument('question')) {
+                return $this->htmlResponse($this->view->render());
+            }
             
             //Get user IP as the rate limit key
-            $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $ip = $this->request->getAttribute('normalizedParams')->getRemoteAddress();
+            // error_log('[ChatController] IP resolved as: ' . $ip);
             if (!$this->rateLimitService->isAllowed($ip)) {
                 return $this->jsonResponse(json_encode([
                     'answer' => 'You have reached the daily question limit. Please try again tomorrow or contact us at results@ocular.nz for further help.'
                 ]));
-            }
-
-            if (!$this->request->hasArgument('question')) {
-                return $this->htmlResponse($this->view->render());
             }
 
             $question = $this->request->getArgument('question');

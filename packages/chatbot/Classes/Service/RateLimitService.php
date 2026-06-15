@@ -12,13 +12,16 @@ class RateLimitService
     private const LIMIT = 200;
     
     // 24 hours in seconds
-    private const WINDOW = 864000;
+    private const WINDOW = 86400;
+
+    private string $secret;
 
     private ConnectionPool $connectionPool;
 
     public function __construct(ConnectionPool $connectionPool)
     {
         $this->connectionPool = $connectionPool;
+        $this->secret = getenv('RATE_LIMIT_SECRET') ?: 'fallback-secret-change-me';
     }
 
     /**
@@ -26,54 +29,30 @@ class RateLimitService
      */
     public function isAllowed(string $ip): bool
     {
-        // Hash the IP for privacy
-        $ipHash = hash('sha256', $ip);
+        $ipHash = hash_hmac('sha256', $ip, $this->secret);
         $now = time();
 
         $connection = $this->connectionPool->getConnectionForTable('tx_chatbot_rate_limit');
 
-        // Look up existing record for this IP
+        $connection->executeStatement(
+            'INSERT INTO tx_chatbot_rate_limit (ip_hash, question_count, started_at)
+            VALUES (:ip_hash, 1, :now)
+            ON DUPLICATE KEY UPDATE
+                question_count = IF((:now - started_at) >= :window, 1, question_count + 1),
+                started_at     = IF((:now - started_at) >= :window, :now, started_at)',
+            [
+                'ip_hash' => $ipHash,
+                'now'     => $now,
+                'window'  => self::WINDOW,
+            ]
+        );
+
         $record = $connection->select(
-            ['ip_hash', 'question_count', 'started_at'],
+            ['question_count'],
             'tx_chatbot_rate_limit',
             ['ip_hash' => $ipHash]
         )->fetchAssociative();
 
-        // No record yet — first question from this IP
-        if (!$record) {
-            $connection->insert('tx_chatbot_rate_limit', [
-                'ip_hash'        => $ipHash,
-                'question_count' => 1,
-                'started_at'     => $now,
-            ]);
-            return true;
-        }
-
-        // Record exists but window has expired — reset the count
-        if (($now - $record['started_at']) >= self::WINDOW) {
-            $connection->update(
-                'tx_chatbot_rate_limit',
-                [
-                    'question_count' => 1,
-                    'started_at'     => $now,
-                ],
-                ['ip_hash' => $ipHash]
-            );
-            return true;
-        }
-
-        // Within window — check if limit exceeded
-        if ($record['question_count'] >= self::LIMIT) {
-            return false;
-        }
-
-        // Within window and under limit — increment count
-        $connection->update(
-            'tx_chatbot_rate_limit',
-            ['question_count' => $record['question_count'] + 1],
-            ['ip_hash' => $ipHash]
-        );
-
-        return true;
+        return $record['question_count'] <= self::LIMIT;
     }
 }
