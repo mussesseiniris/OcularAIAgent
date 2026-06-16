@@ -59,6 +59,7 @@
     if (!question) return;
     appendMessage(question, 'user');
     input.value = '';
+    history.push({ role: 'user', content: question });
     const pending = appendMessage('…', 'ai');
 
 
@@ -68,13 +69,6 @@
       pending.textContent = 'Bot verification failed. Please refresh and try again.';
       return;
     }
-
-
-
-    // const body = {
-    //   'tx_chatbot_chatbot[question]': question,
-    //   'tx_chatbot_chatbot[history]': JSON.stringify(history),
-    // };
 
     try {
       const res = await fetch(url, {
@@ -89,16 +83,10 @@
 
       const data = await res.json();
 
-      // if (data.verified) {
-      //   humanVerified = true;
-      //   turnstileToken = null;
-      // }
-
       const answer = data.answer || 'Sorry, something went wrong. Please try again.';
       pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
 
     } catch (e) {
-      // console.error('Chatbot error:', e);
       pending.textContent = 'Sorry, something went wrong. Please try again.';
     }
     messages.scrollTop = messages.scrollHeight;
