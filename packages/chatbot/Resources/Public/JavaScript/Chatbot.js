@@ -1,33 +1,3 @@
-// const input = document.getElementById('chatbot-input');
-// const messages = document.getElementById('chatbot-messages');
-// const sendButton = document.getElementById('chatbot-send');
-// const url = sendButton.dataset.url;
-
-
-
-// sendButton.addEventListener('click', function () {
-//     const question = input.value;
-//     const questionDiv = document.createElement('p');
-//     questionDiv.textContent = question;
-//     messages.appendChild(questionDiv);
-//     questionDiv.classList.add("user-chat");
-//     sendQ();
-// })
-
-// async function sendQ() {
-//     const response = await fetch(url, {
-//         method: "Post",
-//         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//         body: new URLSearchParams({
-//             "tx_chatbot_chatbot[question]": input.value,
-//         }),
-//     });
-//     const result = await response.json();
-//     const AIResultDiv = document.createElement('p');
-//     AIResultDiv.textContent = result.answer;
-//     messages.appendChild(AIResultDiv);
-//     AIResultDiv.classList.add("AI-chat");
-// }
 (function () {
   const fab = document.getElementById('chatbot-fab');
   const panel = document.getElementById('chatbot-panel');
@@ -38,7 +8,6 @@
   if (!fab || !panel || !sendBtn) return;
 
   const url = sendBtn.dataset.url;
-  const history = [];
 
   function setOpen(open) {
     panel.hidden = !open;
@@ -90,7 +59,6 @@
     if (!question) return;
     appendMessage(question, 'user');
     input.value = '';
-    history.push({ role: 'user', content: question });
     const pending = appendMessage('…', 'ai');
 
 
@@ -101,27 +69,16 @@
       return;
     }
 
-
-
-    const body = {
-      'tx_chatbot_chatbot[question]': question,
-      'tx_chatbot_chatbot[history]': JSON.stringify(history),
-    };
-
     try {
       const res = await fetch(url, {
         method: 'POST',
+        credentials: 'same-origin',    //include session cookie for server-side chat history
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           'tx_chatbot_chatbot[question]': question,
-          'tx_chatbot_chatbot[history]': JSON.stringify(history),
           'tx_chatbot_chatbot[turnstileToken]': token,
         })
       });
-
-      // const text = await res.text();
-      // console.log('Raw response:', text);
-      // const data = JSON.parse(text);
 
       const data = await res.json();
 
@@ -132,7 +89,6 @@
 
       const answer = data.answer || 'Sorry, something went wrong. Please try again.';
       pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
-      history.push({ role: 'assistant', content: data.answer });
 
     } catch (e) {
       // console.error('Chatbot error:', e);
