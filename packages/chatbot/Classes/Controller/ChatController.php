@@ -13,6 +13,7 @@ class ChatController extends ActionController
 
     private ChatService $chatService;
     private RateLimitService $rateLimitService;
+    private const MAX_TURNS_KEPT = 6;
 
     public function __construct(ChatService $chatService, RateLimitService $rateLimitService)
     {
@@ -27,7 +28,7 @@ class ChatController extends ActionController
      * @return ResponseInterface
      */
     public function askAction(): ResponseInterface
-    {   
+    {
         error_log('[ChatController] askAction called');
         error_log('[ChatController] token argument: ' . ($this->request->hasArgument('turnstileToken') ? 'present' : 'MISSING'));
         error_log('[ChatController] secret key set: ' . (empty(getenv('TURNSTILE_SECRET_KEY')) ? 'NO' : 'yes'));
@@ -67,15 +68,20 @@ class ChatController extends ActionController
             }
 
             $question = $this->request->getArgument('question');
-            $rawHistory = $this->request->hasArgument('history') ? $this->request->getArgument('history') : '[]';
-            $history = json_decode($rawHistory, true) ?? [];
-            $result = $this->chatService->ask($question,$history);
+            $feuser = $this->request->getAttribute('frontend.user');
+            $history = ($feuser !== null) ? ($feuser->getSessionData('chatbot_history') ?? []) : [];
+            $result = $this->chatService->ask($question, $history);
+            $history[] = ['role' => 'user', 'content' => $question];
+            $history[] = ['role' => 'assistant', 'content' => $result];
+            $history = array_slice($history, -self::MAX_TURNS_KEPT);
+            if ($feuser !== null) {
+                $feuser->setAndSaveSessionData('chatbot_history', $history);
+            }
             return $this->jsonResponse(json_encode(['answer' => $result]));
-            
         } catch (\Throwable $e) {
             error_log('[ChatController] ERROR: ' . $e->getMessage());
             return $this->jsonResponse(json_encode([
-            'answer' => 'Something went wrong. Please try again.'
+                'answer' => 'Something went wrong. Please try again.'
             ]));
         }
     }
@@ -86,7 +92,7 @@ class ChatController extends ActionController
 
         if (empty($token)) {
             error_log('[Turnstile] Empty token — verification failed');
-            return false; 
+            return false;
         }
 
         try {
@@ -110,12 +116,9 @@ class ChatController extends ActionController
             }
 
             return $result['success'] ?? false;
-
         } catch (\Throwable $e) {
             error_log('[Turnstile] HTTP request failed: ' . $e->getMessage());
             return false;
         }
     }
-
-
 }
