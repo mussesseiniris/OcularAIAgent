@@ -15,6 +15,7 @@ class ChatController extends ActionController
     private ChatService $chatService;
     private RateLimitService $rateLimitService;
     private LoggerInterface $logger;
+    private const MAX_TURNS_KEPT = 6;
 
     public function __construct(ChatService $chatService, RateLimitService $rateLimitService, LoggerInterface $logger)
     {
@@ -70,17 +71,22 @@ class ChatController extends ActionController
             }
 
             $question = $this->request->getArgument('question');
-            $rawHistory = $this->request->hasArgument('history') ? $this->request->getArgument('history') : '[]';
-            $history = json_decode($rawHistory, true) ?? [];
-            $result = $this->chatService->ask($question,$history);
+            $feuser = $this->request->getAttribute('frontend.user');
+            $history = ($feuser !== null) ? ($feuser->getSessionData('chatbot_history') ?? []) : [];
+            $result = $this->chatService->ask($question, $history);
+            $history[] = ['role' => 'user', 'content' => $question];
+            $history[] = ['role' => 'assistant', 'content' => $result];
+            $history = array_slice($history, -self::MAX_TURNS_KEPT);
+            if ($feuser !== null) {
+                $feuser->setAndSaveSessionData('chatbot_history', $history);
+            }
             return $this->jsonResponse(json_encode(['answer' => $result]));
-            
         } catch (\Throwable $e) {
             this->logger->error('[ChatController] ERROR: ' . $e->getMessage(),  [
                 'exception' => $e,
             ]);
             return $this->jsonResponse(json_encode([
-            'answer' => 'Something went wrong. Please try again.'
+                'answer' => 'Something went wrong. Please try again.'
             ]));
         }
     }
@@ -114,12 +120,9 @@ class ChatController extends ActionController
             ]);
             
             return $result['success'] ?? false;
-
         } catch (\Throwable $e) {
             this->logger->error('[Turnstile] HTTP request failed: ' . $e->getMessage());
             return false;
         }
     }
-
-
 }
