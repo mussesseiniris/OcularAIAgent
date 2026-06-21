@@ -7,19 +7,22 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use Ocular\Chatbot\Service\RateLimitService;
+use Psr\Log\LoggerInterface;
 
 class ChatController extends ActionController
 {
 
     private ChatService $chatService;
     private RateLimitService $rateLimitService;
+    private LoggerInterface $logger;
     private const MAX_TURNS_KEPT = 6;
 
-    public function __construct(ChatService $chatService, RateLimitService $rateLimitService)
+    public function __construct(ChatService $chatService, RateLimitService $rateLimitService, LoggerInterface $logger)
     {
 
         $this->chatService = $chatService;
         $this->rateLimitService = $rateLimitService;
+        $this->$logger = $logger;
     }
 
     /**
@@ -28,15 +31,15 @@ class ChatController extends ActionController
      * @return ResponseInterface
      */
     public function askAction(): ResponseInterface
-    {
-        error_log('[ChatController] askAction called');
-        error_log('[ChatController] token argument: ' . ($this->request->hasArgument('turnstileToken') ? 'present' : 'MISSING'));
-        error_log('[ChatController] secret key set: ' . (empty(getenv('TURNSTILE_SECRET_KEY')) ? 'NO' : 'yes'));
+    {   
+        this->logger->debug('[ChatController] askAction called');
+        this->logger->debug('[ChatController] token argument: ' . ($this->request->hasArgument('turnstileToken') ? 'present' : 'MISSING'));
+        this->logger->debug('[ChatController] secret key set: ' . (empty(getenv('TURNSTILE_SECRET_KEY')) ? 'NO' : 'yes'));
         try {
 
             $secretKey = getenv('TURNSTILE_SECRET_KEY');
             if (empty($secretKey)) {
-                error_log('[Turnstile] TURNSTILE_SECRET_KEY is not set — blocking all requests');
+                this->logger->error('[Turnstile] TURNSTILE_SECRET_KEY is not set — blocking all requests');
                 return $this->jsonResponse(json_encode([
                     'answer' => 'Service configuration error. Please contact us at results@ocular.nz.'
                 ]));
@@ -48,7 +51,7 @@ class ChatController extends ActionController
 
 
             if (!$this->verifyTurnstile($token, $secretKey)) {
-                error_log('[Turnstile] Blocked request from IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                this->logger->warning('[Turnstile] Blocked request from IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                 return $this->jsonResponse(json_encode([
                     'answer' => 'Verification failed. Please try again.'
                 ]));
@@ -60,7 +63,7 @@ class ChatController extends ActionController
             
             //Get user IP as the rate limit key
             $ip = $this->request->getAttribute('normalizedParams')->getRemoteAddress();
-            // error_log('[ChatController] IP resolved as: ' . $ip);
+            // this->logger->debug('[ChatController] IP resolved as: ' . $ip);
             if (!$this->rateLimitService->isAllowed($ip)) {
                 return $this->jsonResponse(json_encode([
                     'answer' => 'You have reached the daily question limit. Please try again tomorrow or contact us at results@ocular.nz for further help.'
@@ -79,7 +82,9 @@ class ChatController extends ActionController
             }
             return $this->jsonResponse(json_encode(['answer' => $result]));
         } catch (\Throwable $e) {
-            error_log('[ChatController] ERROR: ' . $e->getMessage());
+            this->logger->error('[ChatController] ERROR: ' . $e->getMessage(),  [
+                'exception' => $e,
+            ]);
             return $this->jsonResponse(json_encode([
                 'answer' => 'Something went wrong. Please try again.'
             ]));
@@ -91,8 +96,8 @@ class ChatController extends ActionController
         $secretKey = getenv('TURNSTILE_SECRET_KEY');
 
         if (empty($token)) {
-            error_log('[Turnstile] Empty token — verification failed');
-            return false;
+            this->logger->debug('[Turnstile] Empty token — verification failed');
+            return false; 
         }
 
         try {
@@ -108,16 +113,15 @@ class ChatController extends ActionController
             $body = $response->getBody()->getContents();
             $result = json_decode($body, true);
 
-            error_log('[Turnstile] Cloudflare response: ' . $body);
-            error_log('[Turnstile] Success: ' . ($result['success'] ? 'true' : 'false'));
-
-            if (!empty($result['error-codes'])) {
-                error_log('[Turnstile] Error codes: ' . implode(', ', $result['error-codes']));
-            }
-
+            $this->logger->debug('[Turnstile] Cloudflare response: ' . $body);
+            $this->logger->debug('[ChatController] Turnstile response received', [
+                'success' => $result['success'] ?? false,
+                'error_codes' => $result['error-codes'] ?? [],
+            ]);
+            
             return $result['success'] ?? false;
         } catch (\Throwable $e) {
-            error_log('[Turnstile] HTTP request failed: ' . $e->getMessage());
+            this->logger->error('[Turnstile] HTTP request failed: ' . $e->getMessage());
             return false;
         }
     }

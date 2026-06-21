@@ -10,6 +10,7 @@ use Qdrant\Models\Filter\Condition\MatchAny;
 use Qdrant\Models\Filter\Filter;
 use Qdrant\Models\Request\SearchRequest;
 use Qdrant\Models\VectorStruct;
+use Psr\Log\LoggerInterface;
 
 
 class ChatService
@@ -18,19 +19,25 @@ class ChatService
     private Voyage4EmbeddingGenerator $voyage4EmbeddingGenerator;
     private QdrantVectorStore $qdrantVectorStore;
     private OpenAIChat $chat;
+    private LoggerInterface $logger;
 
-    public function __construct(Voyage4EmbeddingGenerator $voyage4EmbeddingGenerator, QdrantVectorStore $qdrantVectorStore, OpenAIChat $chat)
-    {
+    public function __construct(
+        Voyage4EmbeddingGenerator $voyage4EmbeddingGenerator, 
+        QdrantVectorStore $qdrantVectorStore, 
+        OpenAIChat $chat
+        LoggerInterface $logger
+    ) {
         $this->voyage4EmbeddingGenerator = $voyage4EmbeddingGenerator;
         $this->qdrantVectorStore = $qdrantVectorStore;
         $this->chat = $chat;
+        $this->logger = $logger;
     }
 
     public function search(string $question, int $limit = 6): array
     {
         // Generate embedding for the question
         $questionEmbedding = $this->voyage4EmbeddingGenerator->embedText($question);
-        error_log('[ChatService] embedding count: ' . count($questionEmbedding));
+        this->logger->debug('[ChatService] embedding count: ' . count($questionEmbedding));
 
         // Use new QueryRequest instead of deprecated SearchRequest
         $searchRequest = (new SearchRequest(new VectorStruct($questionEmbedding, 'openai')))
@@ -213,20 +220,22 @@ class ChatService
         //step 1: Get relevant chunks from vetor databasde(Qdrant)
         $results = $this->search($question);
 
-        error_log('[ChatService] Query: ' . $question);
-        error_log('[ChatService] Retrieved ' . count($results) . ' chunks:');
+        $this->logger->debug('[ChatService] Search results', [
+                'query'       => $question,
+                'result_count' => count($results),
+        ]);
+
         foreach ($results as $i => $doc) {
             $payload = $doc['payload'];
-            $score   = $doc['score'] ?? 'n/a';
-            error_log(sprintf(
-                '[ChatService] [%d] score=%.4f | type=%s | name=%s | tags=%s',
-                $i + 1,
-                $score,
-                $payload['entity_type'] ?? '',
-                $payload['entity_name'] ?? '',
-                implode(', ', $payload['tags'] ?? [])
-            ));
-            error_log('[ChatService] [' . ($i + 1) . '] content_preview: ' . mb_substr($payload['content'] ?? '', 0, 200));
+                $this->logger->debug(sprintf(
+                    '[ChatService] Chunk %d: score=%.4f | type=%s | name=%s | tags=%s | preview=%s',
+                    $i + 1,
+                    $doc['score'] ?? 0,
+                    $payload['entity_type'] ?? '',
+                    $payload['entity_name'] ?? '',
+                    implode(', ', $payload['tags'] ?? []),
+                    mb_substr($payload['content'] ?? '', 0, 200)
+                ));
         }
 
    //step 2: Build knowledge base from chunks (per-chunk, each with its own URL)
