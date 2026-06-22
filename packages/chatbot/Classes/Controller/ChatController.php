@@ -39,7 +39,7 @@ class ChatController extends ActionController
 
             $secretKey = getenv('TURNSTILE_SECRET_KEY');
             if (empty($secretKey)) {
-                this->logger->error('[Turnstile] TURNSTILE_SECRET_KEY is not set — blocking all requests');
+                $this->logger->error('[Turnstile] TURNSTILE_SECRET_KEY is not set — blocking all requests');
                 return $this->jsonResponse(json_encode([
                     'answer' => 'Service configuration error. Please contact us at results@ocular.nz.'
                 ]));
