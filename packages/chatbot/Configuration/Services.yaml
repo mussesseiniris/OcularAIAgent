@@ -8,6 +8,9 @@ services:
     resource: "../Classes/*"
     exclude: "../Classes/Domain/Model/*"
 
+  Psr\Http\Client\ClientInterface:
+    class: GuzzleHttp\Client
+
   Ocular\Chatbot\Service\RateLimitService: ~
 
   Ocular\Chatbot\Command\CleanupRateLimitCommand:
