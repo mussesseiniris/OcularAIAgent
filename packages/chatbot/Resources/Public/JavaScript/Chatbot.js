@@ -59,7 +59,7 @@
     if (!question) return;
     appendMessage(question, 'user');
     input.value = '';
-    history.push({ role: 'user', content: question });
+    // history.push({ role: 'user', content: question });
     const pending = appendMessage('…', 'ai');
 
 

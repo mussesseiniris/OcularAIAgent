@@ -24,7 +24,7 @@ class ChatService
     public function __construct(
         Voyage4EmbeddingGenerator $voyage4EmbeddingGenerator, 
         QdrantVectorStore $qdrantVectorStore, 
-        OpenAIChat $chat
+        OpenAIChat $chat,
         LoggerInterface $logger
     ) {
         $this->voyage4EmbeddingGenerator = $voyage4EmbeddingGenerator;
@@ -37,7 +37,7 @@ class ChatService
     {
         // Generate embedding for the question
         $questionEmbedding = $this->voyage4EmbeddingGenerator->embedText($question);
-        this->logger->debug('[ChatService] embedding count: ' . count($questionEmbedding));
+        $this->logger->debug('[ChatService] embedding count: ' . count($questionEmbedding));
 
         // Use new QueryRequest instead of deprecated SearchRequest
         $searchRequest = (new SearchRequest(new VectorStruct($questionEmbedding, 'openai')))
@@ -311,7 +311,7 @@ Website: https://ocular.nz
         );
 
         $fullText = $systemPrompt . $knowledgeBase . json_encode($history) . $question;
-error_log('[ChatService] approx tokens: ' . (int)(strlen($fullText) / 4));
+        $this->logger->debug('[ChatService] approx tokens: ' . (int)(strlen($fullText) / 4));
 
         //step 4: Send to LLM and return the answer
         $answer = $this->chat->generateChat($messages);
