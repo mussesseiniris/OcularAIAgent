@@ -13,11 +13,20 @@
   function setOpen(open) {
     panel.hidden = !open;
     fab.setAttribute('aria-label', open ? 'Close AI Assistant' : 'Open AI Assistant');
-    if (open) input.focus();
+    if (open) {
+      input.focus();        // Open: Focus moves to the input field
+    } else {
+      fab.focus();          // Close: Focus returns to the assistant button
+    }
   }
+
 
   fab.addEventListener('click', () => {
     setOpen(panel.hidden);
+  });
+
+  panel.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
   });
 
   closeBtn.addEventListener('click', () => setOpen(false));
@@ -98,10 +107,10 @@
       sendBtn.disabled = false;
     }
   }
-   async function loadHistory() {
+  async function loadHistory() {
     if (!historyUrl) return;
     try {
-      const res = await fetch(historyUrl, { credentials: 'same-origin' }); 
+      const res = await fetch(historyUrl, { credentials: 'same-origin' });
       const data = await res.json();
       (data.history || []).forEach(m => {
         const el = appendMessage('', m.role === 'assistant' ? 'ai' : 'user');
