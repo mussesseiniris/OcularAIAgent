@@ -124,9 +124,7 @@ class ChatService
             $answer = $this->chat->generateChat($messages);
             return $answer;
         } catch (\Throwable $e) {
-            error_log('[ChatService] ERROR: ' . $e->getMessage());
-            error_log('[ChatService] Trace: ' . $e->getTraceAsString());
-            throw $e;
+            $this->logger->error('[ChatService] ' . $e->getMessage(), ['exception' => $e]);
         }
     }
 
