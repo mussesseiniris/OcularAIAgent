@@ -8,15 +8,25 @@
   if (!fab || !panel || !sendBtn) return;
 
   const url = sendBtn.dataset.url;
+  const historyUrl = sendBtn.dataset.historyUrl;
 
   function setOpen(open) {
     panel.hidden = !open;
     fab.setAttribute('aria-label', open ? 'Close AI Assistant' : 'Open AI Assistant');
-    if (open) input.focus();
+    if (open) {
+      input.focus();        // Open: Focus moves to the input field
+    } else {
+      fab.focus();          // Close: Focus returns to the assistant button
+    }
   }
+
 
   fab.addEventListener('click', () => {
     setOpen(panel.hidden);
+  });
+
+  panel.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
   });
 
   closeBtn.addEventListener('click', () => setOpen(false));
@@ -33,8 +43,6 @@
   function getFreshToken() {
     return new Promise((resolve, reject) => {
       const container = document.getElementById('cf-turnstile');
-      console.log('[Turnstile] container found:', container);
-      console.log('[Turnstile] window.turnstile exists:', !!window.turnstile);
       if (!container || !window.turnstile) {
         console.log('[Turnstile] Skipping — resolving empty');
         resolve(''); // No Turnstile available (dev environment)
@@ -43,56 +51,81 @@
       turnstile.reset(container);
       turnstile.execute(container, {
         callback: (token) => {
-                console.log('[Turnstile] Token received:', token ? 'yes' : 'empty');
-                resolve(token);
-            },
-            'error-callback': (err) => {
-                console.log('[Turnstile] Error:', err);
-                reject(new Error('Turnstile verification failed'));
-            },
-        });
+          console.log('[Turnstile] Token received:', token ? 'yes' : 'empty');
+          resolve(token);
+        },
+        'error-callback': (err) => {
+          console.log('[Turnstile] Error:', err);
+          reject(new Error('Turnstile verification failed'));
+        },
+      });
     });
   }
 
+  let isSending = false;
+
   async function send() {
+    if (isSending) return;
     const question = input.value.trim();
     if (!question) return;
-    appendMessage(question, 'user');
-    input.value = '';
-    // history.push({ role: 'user', content: question });
-    const pending = appendMessage('…', 'ai');
-
-
+    isSending = true;
+    sendBtn.disabled = true;
     try {
-      token = await getFreshToken();
-    } catch (e) {
-      pending.textContent = 'Bot verification failed. Please refresh and try again.';
-      return;
+      appendMessage(question, 'user');
+      input.value = '';
+      const pending = appendMessage('…', 'ai');
+      try {
+        token = await getFreshToken();
+      } catch (e) {
+        pending.textContent = 'Bot verification failed. Please refresh and try again.';
+        return;
+      }
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',    //include session cookie for server-side chat history
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            'tx_chatbot_chatbot[question]': question,
+            'tx_chatbot_chatbot[turnstileToken]': token,
+          })
+        });
+
+        const data = await res.json();
+
+        const answer = data.answer || 'Sorry, something went wrong. Please try again.';
+        pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));
+
+      } catch (e) {
+        pending.textContent = 'Sorry, something went wrong. Please try again.';
+      }
+      messages.scrollTop = messages.scrollHeight;
     }
-
+    finally {
+      isSending = false;
+      sendBtn.disabled = false;
+    }
+  }
+  async function loadHistory() {
+    if (!historyUrl) return;
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        credentials: 'same-origin',    //include session cookie for server-side chat history
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          'tx_chatbot_chatbot[question]': question,
-          'tx_chatbot_chatbot[turnstileToken]': token,
-        })
-      });
-
+      const res = await fetch(historyUrl, { credentials: 'same-origin' });
       const data = await res.json();
-
-      const answer = data.answer || 'Sorry, something went wrong. Please try again.';
-      pending.innerHTML = DOMPurify.sanitize(marked.parse(answer));  
-
+      (data.history || []).forEach(m => {
+        const el = appendMessage('', m.role === 'assistant' ? 'ai' : 'user');
+        if (m.role === 'assistant') {
+          el.innerHTML = DOMPurify.sanitize(marked.parse(m.content));
+        } else {
+          el.textContent = m.content;
+        }
+      });
     } catch (e) {
-      pending.textContent = 'Sorry, something went wrong. Please try again.';
     }
-    messages.scrollTop = messages.scrollHeight;
   }
 
   sendBtn.addEventListener('click', send);
+  loadHistory();
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); send(); }
   });

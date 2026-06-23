@@ -28,6 +28,28 @@ chatbotAjax {
     }
 }
 
+chatbotHistory=PAGE
+chatbotHistory {
+    typeNum = 1590
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10.header = Content-Type: application/json
+        admPanel = 0
+        debug = 0
+        no_cache = 1
+        index_enable = 0
+    }
+    10 = USER
+    10 {
+        userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+        extensionName = Chatbot
+        pluginName = History
+        vendorName = Ocular
+        controller = Chat
+        action = history
+    }
+}
+
 page.includeCSS.ocularChatbot = EXT:chatbot/Resources/Public/Css/ChatbotStyle.css
 page.includeJSFooter.ocularMarked = EXT:chatbot/Resources/Public/JavaScript/marked.umd.js
   page.includeJSFooter.ocularMarked.defer = 1
