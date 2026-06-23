@@ -8,6 +8,9 @@ services:
     resource: "../Classes/*"
     exclude: "../Classes/Domain/Model/*"
 
+  Psr\Http\Client\ClientInterface:
+    class: GuzzleHttp\Client
+
   Ocular\Chatbot\Service\RateLimitService: ~
 
   Ocular\Chatbot\Command\CleanupRateLimitCommand:
@@ -16,6 +19,19 @@ services:
           command: 'chatbot:cleanup-ratelimit'
           description: 'Deletes rate limit records older than 24 hours'
           schedulable: true
+
+  Ocular\Chatbot\Command\IngestCommand:
+    tags:
+        - name: 'console.command'
+          command: 'chatbot:ingest'
+          description: 'Crawls Ocular content, embeds chunks via Voyage AI, and ingests them into Qdrant'
+
+    # Qdrant - vector database ingestion (used by chatbot:ingest)
+  Ocular\Chatbot\Service\QdrantIngester:
+    arguments:
+      $config: '@Qdrant\Config'
+      $collectionName: "ocular_chunks"
+      $vectorName: null
   
   # Voyage AI - generates embeddings for search queries
   LLPhant\Embeddings\EmbeddingGenerator\VoyageAI\Voyage4EmbeddingGenerator: ~
