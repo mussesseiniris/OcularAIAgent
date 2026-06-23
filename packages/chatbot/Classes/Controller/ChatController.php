@@ -90,6 +90,13 @@ class ChatController extends ActionController
             ]));
         }
     }
+    
+      public function historyAction(): ResponseInterface
+  {
+      $feuser = $this->request->getAttribute('frontend.user');
+      $history = ($feuser !== null) ? ($feuser->getSessionData('chatbot_history') ?? []) : [];
+      return $this->jsonResponse(json_encode(['history' => $history]));
+  }
 
     private function verifyTurnstile(string $token, string $secretKey): bool
     {

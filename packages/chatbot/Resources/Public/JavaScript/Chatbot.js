@@ -8,6 +8,7 @@
   if (!fab || !panel || !sendBtn) return;
 
   const url = sendBtn.dataset.url;
+  const historyUrl = sendBtn.dataset.historyUrl;
 
   function setOpen(open) {
     panel.hidden = !open;
@@ -92,12 +93,30 @@
       }
       messages.scrollTop = messages.scrollHeight;
     }
-finally {
-    isSending = false;
-    sendBtn.disabled = false;
-  }}
+    finally {
+      isSending = false;
+      sendBtn.disabled = false;
+    }
+  }
+   async function loadHistory() {
+    if (!historyUrl) return;
+    try {
+      const res = await fetch(historyUrl, { credentials: 'same-origin' }); 
+      const data = await res.json();
+      (data.history || []).forEach(m => {
+        const el = appendMessage('', m.role === 'assistant' ? 'ai' : 'user');
+        if (m.role === 'assistant') {
+          el.innerHTML = DOMPurify.sanitize(marked.parse(m.content));
+        } else {
+          el.textContent = m.content;
+        }
+      });
+    } catch (e) {
+    }
+  }
 
   sendBtn.addEventListener('click', send);
+  loadHistory();
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); send(); }
   });

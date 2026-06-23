@@ -11,27 +11,20 @@ defined('TYPO3') or die();
 );
 
 (function () {
+    // Plugin A: ask a question (default action = ask)
     \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
         'Chatbot',
         'Chatbot',
-           [
-            \Ocular\Chatbot\Controller\ChatController::class => 'ask'
-        ], 
-        [
-            \Ocular\Chatbot\Controller\ChatController::class => 'ask'
-        ]
+        [ \Ocular\Chatbot\Controller\ChatController::class => 'ask' ],
+        [ \Ocular\Chatbot\Controller\ChatController::class => 'ask' ]
+    );
+
+    // Plugin B: read transcript (default action = history)
+    \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+        'Chatbot',
+        'History',
+        [ \Ocular\Chatbot\Controller\ChatController::class => 'history' ],
+        [ \Ocular\Chatbot\Controller\ChatController::class => 'history' ]
     );
 })();
 
-
-// ExtensionUtility::configurePlugin(
-//     // extension name, matching the PHP namespaces (but without the vendor)
-//     'BlogExample',
-//     // arbitrary, but unique plugin name (not visible in the backend)
-//     'PostSingle',
-//     // all actions
-//     [PostController::class => 'show', CommentController::class => 'create'],
-//     // non-cacheable actions
-//     [CommentController::class => 'create'],
-//     ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT,
-// );
